@@ -1,0 +1,21 @@
+{
+  "camera": {
+    "front": {
+      "title": "Camera"
+    }
+  },
+  "pair": {
+    "api": {
+        "title": "Synology",
+        "description": "Provide the location and credentials to connect to your NAS and get access to Surveillance Station.",
+        "submit": "Login",
+        "label_hostname": "Hostname",
+        "label_port": "Port",
+        "label_account": "Account",
+        "label_passwd": "Password"
+    },
+    "motion": {
+      "title": "Motion Detection"
+    }
+  }
+}

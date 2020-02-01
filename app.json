@@ -1,0 +1,177 @@
+{
+  "id": "com.synology.ss",
+  "version": "1.0.0",
+  "compatibility": ">=3.0.0",
+  "sdk": 2,
+  "name": {
+    "en": "Surveillance Station 2"
+  },
+  "brandColor": "#333333",
+  "description": {
+    "en": "Adds support for camera's available in Synology Surveillance Station",
+    "nl": "Ondersteund Synology Surveillance Station camera's"
+  },
+  "bugs": {
+    "url": "https://github.com/marcschut002/athom.com.synology.ss/issues"
+  },
+  "source": "https://github.com/marcschut002/athom.com.synology.ss",
+  "homepage": "https://github.com/marcschut002/athom.com.synology.ss",
+  "tags": {
+    "en": [ "synology","security","camera" ],
+    "nl": [ "synology","beveiliging","camera" ]
+  },
+  "category": [
+    "security"
+  ],
+  "permissions": [],
+  "images": {
+    "large": "/assets/images/large.png",
+    "small": "/assets/images/small.png"
+  },
+  "author": {
+    "name": "Marc Schut",
+    "email": "marcschut@icloud.com"
+  },
+  "drivers": [
+    {
+      "id": "camera",
+      "name": {
+        "en": "Camera"
+      },
+      "class": "camera",
+      "capabilities": [],
+      "settings": [
+        {
+          "type": "group",
+          "label": {
+            "en": "Synology"
+          },
+          "children": [
+            {
+              "id": "protocol",
+              "type": "dropdown",
+              "label": {
+                "en": "Http/Https"
+              },
+              "value": "https",
+              "values": [
+                {
+                  "id": "http",
+                  "label": "http"
+                },
+                {
+                  "id": "https",
+                  "label": "https"
+                }
+              ]
+            },
+            {
+              "id": "host",
+              "type": "text",
+              "label": {
+                "en": "Hostname",
+                "nl": "Host"
+              },
+              "value": "mynas.synology.me"
+            },
+            {
+              "id": "port",
+              "type": "number",
+              "label": {
+                "en": "Port"
+              },
+              "value": 5001
+            },
+            {
+              "id": "account",
+              "type": "text",
+              "label": {
+                "en": "Account"
+              },
+              "value": "homey"
+            },
+            {
+              "id": "passwd",
+              "type": "password",
+              "label": {
+                "en": "Password",
+                "nl": "Wachtwoord"
+              },
+              "value": "*******"
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Motion Detection"
+          },
+          "children": [
+            {
+              "id": "motion_detection",
+              "type": "checkbox",
+              "label": {
+                "en": "Active",
+                "nl": "Actief"
+              },
+              "value": false
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Session",
+            "nl": "Sessie"
+          },
+          "children": [
+            {
+              "id": "reset_session",
+              "type": "checkbox",
+              "label": {
+                "en": "Reset"
+              },
+              "value": false
+            }
+          ]
+        }],
+      "pair": [
+        {
+          "id": "api"
+        },
+        {
+          "id": "motion"
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ]
+    }
+  ],
+  "flow": {
+    "actions": [
+      {
+        "id": "update_image",
+        "title": {
+          "en": "Update camera image",
+          "nl": "Update camera afbeelding"
+        },
+        "args": [
+          {
+            "name": "camera",
+            "type": "device",
+            "filter": "driver_id=camera"
+          }
+        ]
+      }
+    ]
+  }
+}
