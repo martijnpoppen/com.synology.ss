@@ -16,18 +16,6 @@
   },
   "source": "https://github.com/marcschut002/athom.com.synology.ss",
   "homepage": "https://github.com/marcschut002/athom.com.synology.ss",
-  "tags": {
-    "en": [
-      "synology",
-      "security",
-      "camera"
-    ],
-    "nl": [
-      "synology",
-      "beveiliging",
-      "camera"
-    ]
-  },
   "category": [
     "security"
   ],
