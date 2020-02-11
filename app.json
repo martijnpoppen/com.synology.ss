@@ -1,6 +1,6 @@
 {
   "id": "com.synology.ss",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "compatibility": ">=3.0.0",
   "sdk": 2,
   "name": {
@@ -17,8 +17,16 @@
   "source": "https://github.com/marcschut002/athom.com.synology.ss",
   "homepage": "https://github.com/marcschut002/athom.com.synology.ss",
   "tags": {
-    "en": [ "synology","security","camera" ],
-    "nl": [ "synology","beveiliging","camera" ]
+    "en": [
+      "synology",
+      "security",
+      "camera"
+    ],
+    "nl": [
+      "synology",
+      "beveiliging",
+      "camera"
+    ]
   },
   "category": [
     "security"
@@ -138,7 +146,8 @@
               "value": false
             }
           ]
-        }],
+        }
+      ],
       "pair": [
         {
           "id": "api"
