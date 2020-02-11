@@ -1,6 +1,6 @@
 {
   "id": "com.synology.ss",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "compatibility": ">=3.0.0",
   "sdk": 2,
   "name": {
@@ -145,6 +145,112 @@
         },
         {
           "id": "motion"
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ]
+    },
+    {
+      "id": "nas",
+      "name": {
+        "en": "Nas"
+      },
+      "class": "other",
+      "images": {
+        "large": "/drivers/nas/assets/images/large.png",
+        "small": "/drivers/nas/assets/images/small.png"
+      },
+      "capabilities": [],
+      "settings": [
+        {
+          "type": "group",
+          "label": {
+            "en": "Synology"
+          },
+          "children": [
+            {
+              "id": "protocol",
+              "type": "dropdown",
+              "label": {
+                "en": "Http/Https"
+              },
+              "value": "https",
+              "values": [
+                {
+                  "id": "http",
+                  "label": "http"
+                },
+                {
+                  "id": "https",
+                  "label": "https"
+                }
+              ]
+            },
+            {
+              "id": "host",
+              "type": "text",
+              "label": {
+                "en": "Hostname",
+                "nl": "Host"
+              },
+              "value": "mynas.synology.me"
+            },
+            {
+              "id": "port",
+              "type": "number",
+              "label": {
+                "en": "Port"
+              },
+              "value": 5001
+            },
+            {
+              "id": "account",
+              "type": "text",
+              "label": {
+                "en": "Account"
+              },
+              "value": "homey"
+            },
+            {
+              "id": "passwd",
+              "type": "password",
+              "label": {
+                "en": "Password",
+                "nl": "Wachtwoord"
+              },
+              "value": "*******"
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Session",
+            "nl": "Sessie"
+          },
+          "children": [
+            {
+              "id": "reset_session",
+              "type": "checkbox",
+              "label": {
+                "en": "Reset"
+              },
+              "value": false
+            }
+          ]
+        }],
+      "pair": [
+        {
+          "id": "api"
         },
         {
           "id": "list_devices",
