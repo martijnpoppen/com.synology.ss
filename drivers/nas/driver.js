@@ -21,11 +21,13 @@ module.exports = class NasDriver extends Homey.Driver {
       this.log(data);
       this.log(api);
       this.log(sid);
+      let deviceId = crypto.createHash('md5').update(api.toString()).digest('hex');
+      this.log(deviceId);
 
         const devices = [{
               name: 'Synology',
               data: {
-                  id: this.getRandomInt(999999),
+                  id: deviceId,
               },
               settings: {
                   // Store connection variables in settings
