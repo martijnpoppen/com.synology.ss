@@ -2,7 +2,6 @@
 
 const Homey = require('homey');
 const fetch = require('node-fetch');
-const { ManagerCloud } = require('homey');
 const querystring = require('querystring');
 
 class SynoCameraDevice extends Homey.Device {
@@ -197,7 +196,7 @@ class SynoCameraDevice extends Homey.Device {
   async getHomeyAddress() {
     this.log('get homey address');
 
-    const homeyId = await ManagerCloud.getHomeyId();
+    const homeyId = await Homey.ManagerCloud.getHomeyId();
     const address = `https://${homeyId}.connect.athom.com`;
 
     this.log(address);
@@ -304,7 +303,9 @@ class SynoCameraDevice extends Homey.Device {
   }
 
   async getMotionDetectionRule(settings) {
+    console.log('get motion detection rule');
     const ruleMotion = this.getStoreValue('rule_motion');
+    console.log(ruleMotion);
 
     // no rule yet
     if (ruleMotion === undefined || Number.isInteger(ruleMotion) === false) {
@@ -313,13 +314,18 @@ class SynoCameraDevice extends Homey.Device {
 
     // get from synology
     const rules = await this.getActionRules(settings);
+    let motionRule = null;
 
     Object.keys(rules).forEach((key) => {
       const rule = rules[key];
       if (rule.ruleId === ruleMotion) {
-        return rule;
+        motionRule = rule;
       }
     });
+
+    if (motionRule !== null) {
+      return motionRule;
+    }
 
     return false;
   }
@@ -431,10 +437,10 @@ class SynoCameraDevice extends Homey.Device {
     this.log(response);
 
     // get and save action rule id
-    const rule_motion = await this.getActionRuleMotionDetection(settings, deviceApiMotionUrl);
+    const ruleMotion = await this.getActionRuleMotionDetection(settings, deviceApiMotionUrl);
 
     // save rule id
-    this.setStoreValue('rule_motion', rule_motion);
+    this.setStoreValue('rule_motion', ruleMotion);
   }
 
   // add action rule
@@ -506,6 +512,7 @@ class SynoCameraDevice extends Homey.Device {
       throw new Error('no rules found');
     }
 
+    let ruleMatch = 0;
     Object.keys(response.data.actRule).forEach((i) => {
       const rule = response.data.actRule[i];
 
@@ -523,10 +530,16 @@ class SynoCameraDevice extends Homey.Device {
         if (action.extUrl === deviceApiMotionUrl) {
           // rule found!
           this.log(`motion rule found: ${rule.ruleId}`);
-          return rule.ruleId;
+          ruleMatch = rule.ruleId;
+          return ruleMatch;
         }
       });
     });
+
+    if (ruleMatch > 0) {
+      console.log(`rule ${ruleMatch} found`);
+      return ruleMatch;
+    }
     throw new Error('no rule found');
   }
 }
