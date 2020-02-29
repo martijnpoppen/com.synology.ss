@@ -1,0 +1,21 @@
+{
+  "camera": {
+    "front": {
+      "title": "Camera"
+    }
+  },
+  "pair": {
+    "api": {
+        "title": "Synology",
+        "description": "Vul de gegevens van je Synology in om een verbinding te kunnen maken met de Surveillance Station.",
+        "submit": "Login",
+        "label_hostname": "Hostnaam",
+        "label_port": "Poort",
+        "label_account": "Account",
+        "label_passwd": "Wachtwoord"
+    },
+    "motion": {
+      "title": "Bewegingsmeldingen"
+    }
+  }
+}

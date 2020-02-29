@@ -68,11 +68,12 @@ module.exports = class CameraDriver extends Homey.Driver {
               port: Number(api.port),
               account: api.account,
               passwd: api.passwd,
-              motionDetection,
+              motion_detection: motionDetection,
             },
             store: {
               snapshot_path: cam.snapshot_path,
               sid,
+              version: Homey.manifest.version,
             },
           };
           devices.push(camera);

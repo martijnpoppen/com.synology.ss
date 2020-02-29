@@ -1,6 +1,6 @@
 {
   "id": "com.synology.ss",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "compatibility": ">=3.0.0",
   "sdk": 2,
   "name": {
@@ -34,7 +34,7 @@
       "name": {
         "en": "Camera"
       },
-      "class": "camera",
+      "class": "sensor",
       "images": {
         "large": "/drivers/camera/assets/images/large.png",
         "small": "/drivers/camera/assets/images/small.png"
