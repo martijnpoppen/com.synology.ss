@@ -7,5 +7,9 @@
   },
   "1.0.2": {
     "en": "fixed a crash when installing this app"
+  },
+  "1.1.0": {
+    "en": "notification (!) in app when motion detected, dutch translation, bugfixes",
+    "nl": "notificatie (!) in de app bij beweging, nederlandse vertaling, bugfixes"
   }
 }

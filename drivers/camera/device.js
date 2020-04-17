@@ -14,6 +14,8 @@ class SynoCameraDevice extends Homey.Device {
     this.log(data);
     this.log(settings);
 
+    this.migrate();
+
     try {
       // get new session id
       const sid = await this.getSid(settings);
@@ -45,6 +47,36 @@ class SynoCameraDevice extends Homey.Device {
             && this.hasCapability('alarm_motion') === false) {
       this.addCapability('alarm_motion');
     }
+  }
+
+  migrate() {
+    this.log('migrate device');
+
+    const appVersion = Homey.manifest.version;
+    const deviceVersion = this.getStoreValue('version');
+
+    this.log(appVersion);
+    this.log(deviceVersion);
+
+    if (appVersion === deviceVersion) {
+      // same version, no migration
+      return true;
+    }
+
+    switch (appVersion) {
+      case '1.1.0':
+        this.setClass('sensor')
+          .catch(this.error)
+          .then(this.log);
+        this.log('camera changed to sensor class');
+        break;
+      default:
+        this.log('nothing to migrate');
+    }
+
+    // set version
+    this.setStoreValue('version', appVersion);
+    return true;
   }
 
   onAdded() {
@@ -303,9 +335,9 @@ class SynoCameraDevice extends Homey.Device {
   }
 
   async getMotionDetectionRule(settings) {
-    console.log('get motion detection rule');
+    this.log('get motion detection rule');
     const ruleMotion = this.getStoreValue('rule_motion');
-    console.log(ruleMotion);
+    this.log(ruleMotion);
 
     // no rule yet
     if (ruleMotion === undefined || Number.isInteger(ruleMotion) === false) {
@@ -388,7 +420,7 @@ class SynoCameraDevice extends Homey.Device {
       that.setCapabilityValue('alarm_motion', false);
       that.motion_timer = null;
       this.log('device motion ended');
-    }, 15000);
+    }, 21000);
   }
 
   async createMotionDetectionRule(settings) {
@@ -537,7 +569,7 @@ class SynoCameraDevice extends Homey.Device {
     });
 
     if (ruleMatch > 0) {
-      console.log(`rule ${ruleMatch} found`);
+      this.log(`rule ${ruleMatch} found`);
       return ruleMatch;
     }
     throw new Error('no rule found');
