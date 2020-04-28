@@ -26,6 +26,7 @@ class SynoCameraDevice extends Homey.Device {
     } catch (e) {
       this.error(e.message);
       this.setUnavailable('Cannot connect to Synology');
+      return;
     }
 
     // timers
@@ -47,6 +48,8 @@ class SynoCameraDevice extends Homey.Device {
             && this.hasCapability('alarm_motion') === false) {
       this.addCapability('alarm_motion');
     }
+
+    this.setAvailable();
   }
 
   migrate() {

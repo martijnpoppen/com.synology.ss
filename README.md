@@ -1,6 +1,6 @@
 # Surveillance Station
 
-Adds support for Camera's available in Synology Surveillance Station.
+Adds support to Homey for Camera's available in Synology Surveillance Station.
 
 ## Features
 
@@ -14,6 +14,7 @@ Adds support for Camera's available in Synology Surveillance Station.
 
 #### flows
 * Action to update camera image. This can be used in doorbell flows.
+* Actions to manager the Home Mode (only for Surveillance Station).
 
 ## Getting Started
 * Install the app on Homey

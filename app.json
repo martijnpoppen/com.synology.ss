@@ -11,6 +11,13 @@
     "en": "Adds support for camera's available in Synology Surveillance Station",
     "nl": "Ondersteund Synology Surveillance Station camera's"
   },
+  "contributing": {
+    "donate": {
+      "paypal": {
+        "username": "marcschut"
+      }
+    }
+  },
   "bugs": {
     "url": "https://github.com/marcschut002/athom.com.synology.ss/issues"
   },
@@ -27,6 +34,28 @@
   "author": {
     "name": "Marc Schut",
     "email": "marcschut@icloud.com"
+  },
+  "capabilities": {
+    "home_mode": {
+      "type": "boolean",
+      "title": {
+        "nl": "Home Mode",
+        "en": "Home Mode"
+      },
+      "getable": true,
+      "setable": true,
+      "uiComponent": "toggle",
+      "uiQuickAction": false,
+      "insights": true,
+      "insightsTitleTrue": {
+        "en": "Home Mode on",
+        "nl": "Home Mode aan"
+      },
+      "insightsTitleFalse": {
+        "en": "Home Mode off",
+        "nl": "Home Mode uit"
+      }
+    }
   },
   "drivers": [
     {
@@ -117,23 +146,6 @@
               "value": false
             }
           ]
-        },
-        {
-          "type": "group",
-          "label": {
-            "en": "Session",
-            "nl": "Sessie"
-          },
-          "children": [
-            {
-              "id": "reset_session",
-              "type": "checkbox",
-              "label": {
-                "en": "Reset"
-              },
-              "value": false
-            }
-          ]
         }
       ],
       "pair": [
@@ -142,6 +154,95 @@
         },
         {
           "id": "motion"
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ]
+    },
+    {
+      "id": "station",
+      "name": {
+        "en": "Surveillance Station"
+      },
+      "class": "other",
+      "images": {
+        "large": "/drivers/station/assets/images/large.png",
+        "small": "/drivers/station/assets/images/small.png"
+      },
+      "capabilities": ["home_mode"],
+      "settings": [
+        {
+          "type": "group",
+          "label": {
+            "en": "Synology"
+          },
+          "children": [
+            {
+              "id": "protocol",
+              "type": "dropdown",
+              "label": {
+                "en": "Http/Https"
+              },
+              "value": "https",
+              "values": [
+                {
+                  "id": "http",
+                  "label": "http"
+                },
+                {
+                  "id": "https",
+                  "label": "https"
+                }
+              ]
+            },
+            {
+              "id": "host",
+              "type": "text",
+              "label": {
+                "en": "Hostname",
+                "nl": "Host"
+              },
+              "value": "mynas.synology.me"
+            },
+            {
+              "id": "port",
+              "type": "number",
+              "label": {
+                "en": "Port"
+              },
+              "value": 5001
+            },
+            {
+              "id": "account",
+              "type": "text",
+              "label": {
+                "en": "Account"
+              },
+              "value": "homey"
+            },
+            {
+              "id": "passwd",
+              "type": "password",
+              "label": {
+                "en": "Password",
+                "nl": "Wachtwoord"
+              },
+              "value": "*******"
+            }
+          ]
+        }],
+      "pair": [
+        {
+          "id": "api"
         },
         {
           "id": "list_devices",
@@ -276,6 +377,34 @@
             "name": "camera",
             "type": "device",
             "filter": "driver_id=camera"
+          }
+        ]
+      },
+      {
+        "id": "home_mode_on",
+        "title": {
+          "en": "Enter Home Mode",
+          "nl": "Home Mode Openen"
+        },
+        "args": [
+          {
+            "name": "station",
+            "type": "device",
+            "filter": "driver_id=station"
+          }
+        ]
+      },
+      {
+        "id": "home_mode_off",
+        "title": {
+          "en": "Leave Home Mode",
+          "nl": "Home Mode Verlaten"
+        },
+        "args": [
+          {
+            "name": "station",
+            "type": "device",
+            "filter": "driver_id=station"
           }
         ]
       }

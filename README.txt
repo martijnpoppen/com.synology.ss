@@ -5,15 +5,19 @@ Motion detection
  Enable/disable motion detection when installing device and in advanced camera settings
  Motion detection pushed by Surveillance Station
 
+Home Mode
+ Manage your Home Mode by adding your Surveillance Station to Homey.
+
 Flows
  Action to update camera image. This can be used in doorbell flows.
+ Actions to manager the Home Mode (only for Surveillance Station).
 
 Getting Started
  Install the app on Homey
  Add a device
+ Select the Camera or Surveillance Station
  Provide the credentials to your Synology
- Enable motion detection (optional)
- Select your camera(s)
+ Select your device(s)
  Done!
 
 Tested with

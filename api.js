@@ -34,4 +34,58 @@ module.exports = [
       callback(null, {});
     },
   },
+  {
+    method: 'GET',
+    path: '/homemode_on/:id',
+    public: true,
+    fn(args, callback) {
+      console.log('trigger home mode on');
+      console.log('params');
+      console.log(args.params.id);
+
+      const id = args.params.id;
+
+      try {
+        const device = ManagerDrivers.getDriver('station').getDevice({ id });
+        console.log(device);
+
+        if (device !== undefined && device !== null) {
+          device.onHomeModeStatusChange(true);
+        }
+      } catch (e) {
+        console.log('no devices found');
+        console.log(e);
+      }
+
+      // callback follows ( err, result )
+      callback(null, {});
+    },
+  },
+  {
+    method: 'GET',
+    path: '/homemode_off/:id',
+    public: true,
+    fn(args, callback) {
+      console.log('trigger home mode off');
+      console.log('params');
+      console.log(args.params.id);
+
+      const id = args.params.id;
+
+      try {
+        const device = ManagerDrivers.getDriver('station').getDevice({ id });
+        console.log(device);
+
+        if (device !== undefined && device !== null) {
+          device.onHomeModeStatusChange(false);
+        }
+      } catch (e) {
+        console.log('no devices found');
+        console.log(e);
+      }
+
+      // callback follows ( err, result )
+      callback(null, {});
+    },
+  }
 ];

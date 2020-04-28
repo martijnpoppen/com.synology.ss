@@ -5,15 +5,19 @@ Bewegingsmelding
  Aan/uitzetten van bewegingsmelding bij het installeren van de camera en via de instellingen van de camera
  Bewegingsmelding wordt via Surveillance Station doorgegeven aan de Homey. Snel en efficient.
 
+Home Mode
+ Beheer je Home Mode via Homey. Voeg je Surveillance Station toe om dit te gebruiken.
+
 Flows
  Actie om de afbeeding van de camera te updaten. Kan bijvoorbeeld gebruikt vlak voor het versturen van de afbeelding.
+ Acties om de Home Mode te beheren (alleen voor Surveillance Station).
 
 Installatie
  Installeer de app op je Homey
- Voeg een camera toe via de app
+ Voeg een apparaat toe via de app
+ Selecteer de camera of Surveillance Station
  Vul de credentials en locatie in van je Synology
- Aan/uitzetten van bewegingsmeldingen
- Selecteer je camera(s)
+ Selecteer je apparaat
  Klaar!
 
 Getest met
