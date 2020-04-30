@@ -17,7 +17,7 @@ Getting Started
  Add a device
  Select the Camera or Surveillance Station
  Provide the credentials to your Synology
- Select your device(s)
+ Select your device
  Done!
 
 Tested with

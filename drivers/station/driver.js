@@ -3,13 +3,7 @@
 const Homey = require('homey');
 const querystring = require('querystring');
 const fetch = require('node-fetch');
-
-let crypto;
-try {
-  crypto = require('crypto');
-} catch (err) {
-  console.log('crypto support is disabled!');
-}
+const crypto = require('crypto');
 
 module.exports = class StationDriver extends Homey.Driver {
   async onPair(socket) {
@@ -28,30 +22,30 @@ module.exports = class StationDriver extends Homey.Driver {
       this.log(data);
       this.log(api);
       this.log(sid);
-      let deviceId = crypto.createHash('md5').update(api.toString()).digest('hex');
+      const deviceId = crypto.createHash('md5').update(api.toString()).digest('hex');
       this.log(deviceId);
 
-        const devices = [{
-              name: 'Surveillance Station',
-              data: {
-                  id: deviceId,
-              },
-              settings: {
-                  // Store connection variables in settings
-                  // so the user can change them later
-                  protocol: api.protocol,
-                  host: api.host,
-                  port: Number(api.port),
-                  account: api.account,
-                  passwd: api.passwd
-              },
-              store: {
-                  sid,
-              },
-          }];
+      const devices = [{
+        name: 'Surveillance Station',
+        data: {
+          id: deviceId,
+        },
+        settings: {
+          // Store connection variables in settings
+          // so the user can change them later
+          protocol: api.protocol,
+          host: api.host,
+          port: Number(api.port),
+          account: api.account,
+          passwd: api.passwd,
+        },
+        store: {
+          sid,
+        },
+      }];
 
-        this.log(devices);
-        callback(null, devices);
+      this.log(devices);
+      callback(null, devices);
     });
 
     socket.on('sid', (data, callback) => {
@@ -113,8 +107,4 @@ module.exports = class StationDriver extends Homey.Driver {
       });
     }
   }
-
-  getRandomInt(max) {
-        return Math.floor(Math.random() * Math.floor(max));
-    }
 };

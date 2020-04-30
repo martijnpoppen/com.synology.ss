@@ -1,5 +1,6 @@
 'use strict';
 
+const Homey = require('homey');
 const { ManagerDrivers } = require('homey');
 
 module.exports = [
@@ -8,8 +9,8 @@ module.exports = [
     path: '/motion/:id',
     public: true,
     fn(args, callback) {
-      console.log('params');
-      console.log(args.params.id);
+      Homey.app.log('params');
+      Homey.app.log(args.params.id);
 
       const id = Number(args.params.id);
 
@@ -20,14 +21,14 @@ module.exports = [
 
       try {
         const device = ManagerDrivers.getDriver('camera').getDevice({ id });
-        console.log(device);
+        Homey.app.log(device);
 
         if (device !== undefined && device !== null) {
           device.onMotion();
         }
       } catch (e) {
-        console.log('no devices found');
-        console.log(e);
+        Homey.app.log('no devices found');
+        Homey.app.log(e);
       }
 
       // callback follows ( err, result )
@@ -39,22 +40,22 @@ module.exports = [
     path: '/homemode_on/:id',
     public: true,
     fn(args, callback) {
-      console.log('trigger home mode on');
-      console.log('params');
-      console.log(args.params.id);
+      Homey.app.log('trigger home mode on');
+      Homey.app.log('params');
+      Homey.app.log(args.params.id);
 
       const id = args.params.id;
 
       try {
         const device = ManagerDrivers.getDriver('station').getDevice({ id });
-        console.log(device);
+        Homey.app.log(device);
 
         if (device !== undefined && device !== null) {
           device.onHomeModeStatusChange(true);
         }
       } catch (e) {
-        console.log('no devices found');
-        console.log(e);
+        Homey.app.log('no devices found');
+        Homey.app.log(e);
       }
 
       // callback follows ( err, result )
@@ -66,26 +67,26 @@ module.exports = [
     path: '/homemode_off/:id',
     public: true,
     fn(args, callback) {
-      console.log('trigger home mode off');
-      console.log('params');
-      console.log(args.params.id);
+      Homey.app.log('trigger home mode off');
+      Homey.app.log('params');
+      Homey.app.log(args.params.id);
 
       const id = args.params.id;
 
       try {
         const device = ManagerDrivers.getDriver('station').getDevice({ id });
-        console.log(device);
+        Homey.app.log(device);
 
         if (device !== undefined && device !== null) {
           device.onHomeModeStatusChange(false);
         }
       } catch (e) {
-        console.log('no devices found');
-        console.log(e);
+        Homey.app.log('no devices found');
+        Homey.app.log(e);
       }
 
       // callback follows ( err, result )
       callback(null, {});
     },
-  }
+  },
 ];

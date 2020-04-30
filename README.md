@@ -21,7 +21,7 @@ Adds support to Homey for Camera's available in Synology Surveillance Station.
 * Add a device
 * Provide the credentials to your Synology
 * Enable motion detection (optional)
-* Select your camera(s)
+* Select your camera
 * Done!
 
 ## Tested with

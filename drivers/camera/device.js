@@ -6,7 +6,11 @@ const querystring = require('querystring');
 
 class SynoCameraDevice extends Homey.Device {
   async onInit() {
+    this.cameraImage = null;
+
     this.log('init device');
+
+    this.setUnavailable('initializing');
 
     const data = this.getData();
     const settings = this.getSettings();
@@ -29,27 +33,26 @@ class SynoCameraDevice extends Homey.Device {
       return;
     }
 
-    // timers
-    this.motion_timer = null;
-
     // set image
     this.setImage(settings);
 
-    // update image action
-    const updateImageAction = new Homey.FlowCardAction('update_image');
-    updateImageAction
-      .register()
-      .registerRunListener(() => {
-        this.image.update();
-        return Promise.resolve(true);
-      });
+    // motion detection
+    this.motion_timer = null;
 
     if (settings.motion_detection === true
             && this.hasCapability('alarm_motion') === false) {
       this.addCapability('alarm_motion');
+      this.setCapabilityValue('alarm_motion', false);
     }
 
+    this.log('camera available');
     this.setAvailable();
+
+    // enable motion detection
+    if (this.added === true && settings.motion_detection === true) {
+      this.enableMotionDetection(settings);
+    }
+    this.added = false;
   }
 
   migrate() {
@@ -84,12 +87,7 @@ class SynoCameraDevice extends Homey.Device {
 
   onAdded() {
     this.log('on added');
-    const settings = this.getSettings();
-
-    // add motion detection rule
-    if (settings.motion_detection === true) {
-      this.enableMotionDetection(settings);
-    }
+    this.added = true;
   }
 
   onDeleted() {
@@ -107,9 +105,12 @@ class SynoCameraDevice extends Homey.Device {
     const sid = this.getStoreValue('sid');
     const snapshotPath = this.getStoreValue('snapshot_path');
 
-    this.image = new Homey.Image();
-    this.image.setStream(async (stream) => {
+    this.cameraImage = new Homey.Image();
+
+    this.log('set stream');
+    this.cameraImage.setStream(async (stream) => {
       const res = await fetch(`${settings.protocol}://${settings.host}:${settings.port}${snapshotPath}&_sid=${sid}`);
+      this.log('image response');
       if (!res.ok) {
         this.log(res);
         throw new Error(res.statusText);
@@ -117,19 +118,30 @@ class SynoCameraDevice extends Homey.Device {
       res.body.pipe(stream);
     });
 
-    this.image.register()
+    this.log('register camera image');
+    this.cameraImage.register()
       .then(() => {
-        return this.setCameraImage('front', Homey.__('camera.front.title'), this.image);
+        return this.setCameraImage('front', Homey.__('camera.front.title'), this.cameraImage);
       })
       .catch(this.error);
+
+    // update image action
+    const updateImageAction = new Homey.FlowCardAction('update_image');
+    updateImageAction
+      .register()
+      .registerRunListener(async () => {
+        this.cameraImage.update();
+        return Promise.resolve(true);
+      });
   }
 
   resetImage(settings) {
     this.log('reset image');
 
     // unregister image
-    this.image.unregister();
-
+    if (this.cameraImage !== null) {
+      this.cameraImage.unregister();
+    }
     // set new image
     this.setImage(settings);
   }
@@ -400,11 +412,17 @@ class SynoCameraDevice extends Homey.Device {
     return response.data.actRule;
   }
 
-  onMotion() {
+  async onMotion() {
     this.log('new motion request');
+
+    if (this.getAvailable() === false) {
+      this.log('device not ready');
+      return;
+    }
 
     const settings = this.getSettings();
     if (settings.motion_detection === false) {
+      this.log('motion detection disabled');
       return;
     }
 
@@ -414,7 +432,9 @@ class SynoCameraDevice extends Homey.Device {
     } else {
       this.log('device motion started');
       this.setCapabilityValue('alarm_motion', true);
-      this.image.update();
+      if (this.cameraImage !== null) {
+        this.cameraImage.update().catch(this.error);
+      }
     }
 
     const that = this;

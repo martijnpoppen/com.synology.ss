@@ -22,7 +22,6 @@ class StationDevice extends Homey.Device {
 
       // set new sid to store
       this.setStoreValue('sid', sid);
-
     } catch (e) {
       this.error(e.message);
       this.setUnavailable('Cannot connect to Synology');
@@ -33,23 +32,23 @@ class StationDevice extends Homey.Device {
     this.setCurrentState(settings);
 
     this.registerCapabilityListener('home_mode', async (value) => {
-      this.log('set home mode: '+value.toString());
+      this.log(`set home mode: ${value.toString()}`);
       this.setHomeMode(value, settings);
       return true;
     });
 
-    let setHomeModeOnAction = new Homey.FlowCardAction('home_mode_on');
+    const setHomeModeOnAction = new Homey.FlowCardAction('home_mode_on');
     setHomeModeOnAction
       .register()
-      .registerRunListener(async ( args, state ) => {
+      .registerRunListener(async () => {
         this.setHomeMode(true, settings); // Promise<void>
         return true;
       });
 
-    let setHomeModeOffAction = new Homey.FlowCardAction('home_mode_off');
+    const setHomeModeOffAction = new Homey.FlowCardAction('home_mode_off');
     setHomeModeOffAction
       .register()
-      .registerRunListener(async ( args, state ) => {
+      .registerRunListener(async () => {
         this.setHomeMode(false, settings);
         return true;
       });
@@ -88,7 +87,7 @@ class StationDevice extends Homey.Device {
 
     const settings = this.getSettings();
 
-    // add motion detection rule
+    // delete home mode rules
     this.deleteHomeModeRules(settings);
   }
 
@@ -186,7 +185,7 @@ class StationDevice extends Homey.Device {
 
   async getHomeModeRule(settings, state) {
     this.log('get home mode rule');
-    const ruleHomeMode = this.getStoreValue('rule_home_mode_'+state);
+    const ruleHomeMode = this.getStoreValue(`rule_home_mode_${state}`);
     this.log(ruleHomeMode);
 
     // no rule yet
@@ -213,13 +212,13 @@ class StationDevice extends Homey.Device {
   }
 
   async createHomeModeRule(settings, state) {
-    this.log('create home mode rule '+state);
+    this.log(`create home mode rule ${state}`);
 
     const homeyaddress = await this.getHomeyAddress();
     const data = this.getData();
     const deviceApiHomeModeUrl = `${homeyaddress}/api/app/com.synology.ss/homemode_${state}/${data.id}`;
     const sid = this.getStoreValue('sid');
-    const evtId=(state==='on') ? 20 : 21;
+    const evtId = (state === 'on') ? 20 : 21;
     const urlq = {
       api: 'SYNO.SurveillanceStation.ActionRule',
       method: 'Save',
@@ -260,13 +259,13 @@ class StationDevice extends Homey.Device {
     const ruleHomeMode = await this.getActionRuleHomeMode(settings, deviceApiHomeModeUrl);
 
     // save rule id
-    this.setStoreValue('rule_home_mode_'+state, ruleHomeMode);
+    this.setStoreValue(`rule_home_mode_${state}`, ruleHomeMode);
   }
 
   async getActionRuleHomeMode(settings, extUrl) {
     this.log('get action rule home mode');
 
-    const actRule=await this.getActionRules(settings);
+    const actRule = await this.getActionRules(settings);
 
     let ruleMatch = 0;
     Object.keys(actRule).forEach((i) => {
@@ -372,23 +371,26 @@ class StationDevice extends Homey.Device {
   // add action rule
   async deleteHomeModeRules(settings) {
     this.log('delete home mode rules');
-    const ruleList=[];
+    const ruleList = [];
 
-    const ruleHomeModeOn = this.getStoreValue('rule_motion_on');
-    if (ruleHomeModeOn !== undefined || Number.isInteger(ruleHomeModeOn) === true) {
+    const ruleHomeModeOn = this.getStoreValue('rule_home_mode_on');
+    if (ruleHomeModeOn !== undefined && Number.isInteger(ruleHomeModeOn) === true) {
       ruleList.push(ruleHomeModeOn);
     }
 
-    const ruleHomeModeOff = this.getStoreValue('rule_motion_off');
-    if (ruleHomeModeOff !== undefined || Number.isInteger(ruleHomeModeOff) === true) {
+    const ruleHomeModeOff = this.getStoreValue('rule_home_mode_off');
+    if (ruleHomeModeOff !== undefined && Number.isInteger(ruleHomeModeOff) === true) {
       ruleList.push(ruleHomeModeOff);
     }
 
-    if(ruleList.length===0) {
+    if (ruleList.length === 0) {
+      this.log('no rules to delete');
       return;
     }
 
-    const idList=ruleList.join(',');
+    this.log(ruleList);
+
+    const idList = ruleList.join(',');
     this.log(idList);
 
     const sid = this.getStoreValue('sid');
@@ -396,7 +398,7 @@ class StationDevice extends Homey.Device {
       api: 'SYNO.SurveillanceStation.ActionRule',
       method: 'Delete',
       version: 1,
-      idList: idList,
+      idList,
       _sid: sid,
     };
     const url = `${settings.protocol}://${settings.host}:${settings.port}/webapi/entry.cgi?${querystring.stringify(urlq)}`;
@@ -456,18 +458,18 @@ class StationDevice extends Homey.Device {
     }
 
     if (response.data === undefined || response.data.on === undefined
-    || typeof response.data.on !== "boolean") {
+    || typeof response.data.on !== 'boolean') {
       throw new Error('no current state found or wrong data returned from Synology');
     }
 
-    this.log('set currrent state to '+response.data.on.toString());
+    this.log(`set currrent state to ${response.data.on.toString()}`);
 
     // set capability
     this.setCapabilityValue('home_mode', response.data.on)
       .catch(this.error);
   }
 
-  async setHomeMode(value, settings){
+  async setHomeMode(value, settings) {
     this.log('set home mode');
 
     const sid = this.getStoreValue('sid');
@@ -500,14 +502,13 @@ class StationDevice extends Homey.Device {
     if (response.success === undefined || response.success === false) {
       throw new Error('response from synology is not ok');
     }
-
   }
 
-  async onHomeModeStatusChange(value){
-    this.log('on home mode state change to '+value.toString());
+  async onHomeModeStatusChange(value) {
+    this.log(`on home mode state change to ${value.toString()}`);
 
-    if(this.getCapabilityValue('home_mode')===value) {
-      this.log('device state already '+value.toString());
+    if (this.getCapabilityValue('home_mode') === value) {
+      this.log(`device state already ${value.toString()}`);
       return;
     }
 
