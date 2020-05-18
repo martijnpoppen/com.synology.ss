@@ -7,6 +7,7 @@ const querystring = require('querystring');
 class SynoCameraDevice extends Homey.Device {
   async onInit() {
     this.cameraImage = null;
+    this.sidRequest=null;
 
     this.log('init device');
 
@@ -34,7 +35,7 @@ class SynoCameraDevice extends Homey.Device {
     }
 
     // set image
-    this.setImage(settings);
+    await this.setImage(settings);
 
     // motion detection
     this.motion_timer = null;
@@ -98,52 +99,66 @@ class SynoCameraDevice extends Homey.Device {
     this.deleteMotionDetectionRule(settings);
   }
 
-  setImage(settings) {
+  async setImage(settings) {
     this.log('set image');
 
-    // get session id
-    const sid = this.getStoreValue('sid');
-    const snapshotPath = this.getStoreValue('snapshot_path');
+    if(this.cameraImage===null) {
+      this.cameraImage = new Homey.Image();
 
-    this.cameraImage = new Homey.Image();
+      await this.setImageStream();
 
+      this.log('register camera image');
+      this.cameraImage.register()
+        .then(() => {
+          return this.setCameraImage('front', Homey.__('camera.front.title'), this.cameraImage);
+        })
+        .catch(this.error);
+
+      // update image action
+      const updateImageAction = new Homey.FlowCardAction('update_image');
+      updateImageAction
+        .register()
+        .registerRunListener(async () => {
+          this.cameraImage.update();
+          return Promise.resolve(true);
+        });
+    }
+
+    await this.setImageStream(settings);
+  }
+
+  async setImageStream(settings) {
     this.log('set stream');
+
+    const snapshotPath = this.getStoreValue('snapshot_path');
+    const sid = this.getStoreValue('sid');
+
+    this.log('sid='+sid);
+
     this.cameraImage.setStream(async (stream) => {
       const res = await fetch(`${settings.protocol}://${settings.host}:${settings.port}${snapshotPath}&_sid=${sid}`);
       this.log('image response');
-      if (!res.ok) {
+      this.log(res);
+      this.log(res.headers.raw());
+      const contentType = res.headers.get("content-type");
+      this.log(contentType);
+      this.log(contentType.indexOf("application/json"));
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        res.json().then(data => {
+          this.log(data);
+          if(data.error.code!==undefined && data.error.code===105){
+            // try to get a new session id
+            this.getNewSid();
+          }
+        }).catch(this.error);
+        throw new Error('failed to get image, please try again later');
+      }
+      else if (!res.ok) {
         this.log(res);
         throw new Error(res.statusText);
       }
       res.body.pipe(stream);
     });
-
-    this.log('register camera image');
-    this.cameraImage.register()
-      .then(() => {
-        return this.setCameraImage('front', Homey.__('camera.front.title'), this.cameraImage);
-      })
-      .catch(this.error);
-
-    // update image action
-    const updateImageAction = new Homey.FlowCardAction('update_image');
-    updateImageAction
-      .register()
-      .registerRunListener(async () => {
-        this.cameraImage.update();
-        return Promise.resolve(true);
-      });
-  }
-
-  resetImage(settings) {
-    this.log('reset image');
-
-    // unregister image
-    if (this.cameraImage !== null) {
-      this.cameraImage.unregister();
-    }
-    // set new image
-    this.setImage(settings);
   }
 
   async onSettings(oldSettingsObj, newSettingsObj, changedKeysArr) {
@@ -169,7 +184,7 @@ class SynoCameraDevice extends Homey.Device {
         // set new sid to store
         this.setStoreValue('sid', sid);
         // reset image with new sid
-        this.resetImage(newSettingsObj);
+        this.setImage(newSettingsObj);
 
         if (this.getAvailable() === false) {
           this.setAvailable();
@@ -238,6 +253,32 @@ class SynoCameraDevice extends Homey.Device {
       return response.data.sid;
     }
     throw new Error('no sid found');
+  }
+
+  async getNewSid() {
+    this.log('get new sid');
+
+    if (this.sidRequest !== null) {
+      this.log('request in progress');
+      return;
+    }
+
+    this.sidRequest=1;
+
+    const settings=this.getSettings();
+
+    // get new session id
+    const sid = await this.getSid(settings);
+
+    this.sidRequest=null;
+
+    this.log(`new sid: ${sid}`);
+    // unset old value
+    this.unsetStoreValue('sid');
+    // set new sid to store
+    this.setStoreValue('sid', sid);
+    // reset image with new sid
+    this.setImage(settings);
   }
 
   async getHomeyAddress() {

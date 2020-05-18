@@ -8,14 +8,23 @@
     "api": {
         "title": "Synology",
         "description": "Provide the location and credentials to connect to your NAS and get access to Surveillance Station.",
+        "otp_description": "Your account has been configured to use 2-Step Verification. Type your 6-digit code below to verify this action.",
         "submit": "Login",
         "label_hostname": "Hostname",
         "label_port": "Port",
         "label_account": "Account",
-        "label_passwd": "Password"
+        "label_passwd": "Password",
+        "label_otp_code": "2-Step Verification",
+        "placeholder_otp_code": "Enter 6-digit code"
     },
     "motion": {
       "title": "Motion Detection"
+    }
+  },
+  "repair": {
+    "api": {
+      "title": "Reconnect",
+      "done": "Great! Your device is connected again."
     }
   }
 }

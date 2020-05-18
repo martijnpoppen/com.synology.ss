@@ -18,6 +18,14 @@ module.exports = class CameraDriver extends Homey.Driver {
       callback(null, true);
     });
 
+    socket.on('api-2fa', (data, callback) => {
+      // set data to api settings
+      api.otp_code = data.otp_code;
+
+      this.validateAPI(socket, api, this);
+      callback(null, true);
+    });
+
     socket.on('motion', (data, callback) => {
       // set data to api settings
       motionDetection = data.motion_detection;
@@ -98,6 +106,42 @@ module.exports = class CameraDriver extends Homey.Driver {
     });
   }
 
+  onRepair( socket, device ) {
+    // Argument socket is an EventEmitter, similar to Driver.onPair
+    // Argument device is a Homey.Device that's being repaired
+
+    let api;
+    let sid;
+
+    socket.on('api', (data, callback) => {
+      // set data to api settings
+      api = data;
+
+      this.validateAPI(socket, data, this);
+      callback(null, true);
+    });
+
+    socket.on('api-2fa', (data, callback) => {
+      // set data to api settings
+      api.otp_code = data.otp_code;
+
+      this.validateAPI(socket, api, this);
+      callback(null, true);
+    });
+
+    socket.on('sid', (data, callback) => {
+      this.log(data);
+      this.log('sid');
+
+      this.log('save sid to device');
+
+      sid = data.sid;
+
+      callback(null, true);
+    });
+
+  }
+
   async validateAPI(socket, data) {
     this.log('validateAPI');
     this.log(data);
@@ -111,6 +155,11 @@ module.exports = class CameraDriver extends Homey.Driver {
       passwd: data.passwd,
       format: 'sid',
     };
+
+    // one time password
+    if(data.otp_code !== undefined && data.otp_code.length > 0) {
+      urlq.otp_code=data.otp_code;
+    }
 
     const url = `${data.protocol}://${data.host}:${data.port}/webapi/auth.cgi?${querystring.stringify(urlq)}`;
 
@@ -136,15 +185,21 @@ module.exports = class CameraDriver extends Homey.Driver {
     this.log('response');
     this.log(response);
 
-    if (response !== undefined && response.data.sid !== undefined) {
+    if (response !== undefined && response.data !== undefined && response.data.sid !== undefined) {
       socket.emit('api-ok', response.data.sid, (err, data) => {
         this.log(data);
       });
     } else if (response !== undefined) {
       // result not ok
-      socket.emit('api-error', 'API login failed', (err, data) => {
-        this.log(data);
-      });
+      if(response.error.code === 403) {
+        socket.emit('api-2fa', '', (err, data) => {
+          this.log(data);
+        });
+      } else {
+        socket.emit('api-error', 'API login failed', (err, data) => {
+          this.log(data);
+        });
+      }
     }
   }
 };

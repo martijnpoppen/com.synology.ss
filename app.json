@@ -1,7 +1,7 @@
 {
   "id": "com.synology.ss",
   "version": "2.0.0",
-  "compatibility": ">=3.0.0",
+  "compatibility": ">=4.1.0",
   "sdk": 2,
   "name": {
     "en": "Surveillance Station 2"
@@ -153,6 +153,9 @@
           "id": "api"
         },
         {
+          "id": "2fa"
+        },
+        {
           "id": "motion"
         },
         {
@@ -168,6 +171,18 @@
         {
           "id": "add_devices",
           "template": "add_devices"
+        }
+      ],
+      "repair": [
+        {
+          "id": "api"
+        },
+        {
+          "id": "2fa"
+        },
+        {
+          "id": "done",
+          "template": "done"
         }
       ]
     },
