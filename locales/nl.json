@@ -8,14 +8,24 @@
     "api": {
         "title": "Synology",
         "description": "Vul de gegevens van je Synology in om een verbinding te kunnen maken met de Surveillance Station.",
+        "otp_description": "Je account in ingesteld met 2-staps verificatie. Geef de 6-cijferige code op om verder te gaan.",
         "submit": "Login",
         "label_hostname": "Hostnaam",
         "label_port": "Poort",
         "label_account": "Account",
-        "label_passwd": "Wachtwoord"
+        "label_passwd": "Wachtwoord",
+        "label_otp_code": "2-Staps Verificatie",
+        "placeholder_otp_code": "Vul de 6-cijferige code in"
     },
     "motion": {
       "title": "Bewegingsmeldingen"
+    },
+    "lost": "Connectie is verlopen. Probeer te repareren."
+  },
+  "repair": {
+    "api": {
+      "title": "Opnieuw verbinden",
+      "done": "Gelukt! Je apparaat is weer verbonden."
     }
   }
 }

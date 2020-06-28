@@ -5,6 +5,7 @@ const querystring = require('querystring');
 const fetch = require('node-fetch');
 
 module.exports = class CameraDriver extends Homey.Driver {
+
   async onPair(socket) {
     let api;
     let motionDetection = false;
@@ -51,13 +52,13 @@ module.exports = class CameraDriver extends Homey.Driver {
           'Content-Type': 'application/json',
           Accept: 'application/json',
         },
-      }).then((response) => {
-        return response.json();
-      }).then((json) => {
+      }).then(res => {
+        return res.json();
+      }).then(json => {
         this.log(json);
         const devices = [];
 
-        Object.keys(json.data.cameras).forEach((i) => {
+        Object.keys(json.data.cameras).forEach(i => {
           const cam = json.data.cameras[i];
 
           this.log(cam.name);
@@ -69,18 +70,14 @@ module.exports = class CameraDriver extends Homey.Driver {
               id: cam.id,
             },
             settings: {
-              // Store connection variables in settings
-              // so the user can change them later
-              protocol: api.protocol,
-              host: api.host,
-              port: Number(api.port),
-              account: api.account,
-              passwd: api.passwd,
               motion_detection: motionDetection,
             },
             store: {
               snapshot_path: cam.snapshot_path,
               sid,
+              protocol: api.protocol,
+              host: api.host,
+              port: Number(api.port),
               version: Homey.manifest.version,
             },
           };
@@ -89,7 +86,7 @@ module.exports = class CameraDriver extends Homey.Driver {
 
         this.log(devices);
         callback(null, devices);
-      }).catch((error) => {
+      }).catch(error => {
         this.log('There has been a problem with your fetch operation:', error);
         callback(new Error('There has been a problem with your fetch operation:', error));
       });
@@ -106,12 +103,9 @@ module.exports = class CameraDriver extends Homey.Driver {
     });
   }
 
-  onRepair( socket, device ) {
-    // Argument socket is an EventEmitter, similar to Driver.onPair
-    // Argument device is a Homey.Device that's being repaired
-
+  onRepair(socket, device) {
+    this.log('on repair');
     let api;
-    let sid;
 
     socket.on('api', (data, callback) => {
       // set data to api settings
@@ -133,13 +127,11 @@ module.exports = class CameraDriver extends Homey.Driver {
       this.log(data);
       this.log('sid');
 
-      this.log('save sid to device');
-
-      sid = data.sid;
+      this.log('save host and sid to device');
+      device.setPairData(api.protocol, api.host, api.port, data.sid);
 
       callback(null, true);
     });
-
   }
 
   async validateAPI(socket, data) {
@@ -157,8 +149,8 @@ module.exports = class CameraDriver extends Homey.Driver {
     };
 
     // one time password
-    if(data.otp_code !== undefined && data.otp_code.length > 0) {
-      urlq.otp_code=data.otp_code;
+    if (data.otp_code !== undefined && data.otp_code.length > 0) {
+      urlq.otp_code = data.otp_code;
     }
 
     const url = `${data.protocol}://${data.host}:${data.port}/webapi/auth.cgi?${querystring.stringify(urlq)}`;
@@ -170,15 +162,15 @@ module.exports = class CameraDriver extends Homey.Driver {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-    }).then((response) => {
-      return response.json();
-    }).then((json) => {
+    }).then(res => {
+      return res.json();
+    }).then(json => {
       return json;
-    }).catch((error) => {
+    }).catch(error => {
       this.log(error);
       // result not ok
-      socket.emit('api-error', error.message, (err, data) => {
-        this.log(data);
+      socket.emit('api-error', error.message, (err, errData) => {
+        this.log(errData);
       });
     });
 
@@ -186,20 +178,21 @@ module.exports = class CameraDriver extends Homey.Driver {
     this.log(response);
 
     if (response !== undefined && response.data !== undefined && response.data.sid !== undefined) {
-      socket.emit('api-ok', response.data.sid, (err, data) => {
-        this.log(data);
+      socket.emit('api-ok', response.data.sid, (err, errData) => {
+        this.log(errData);
       });
     } else if (response !== undefined) {
       // result not ok
-      if(response.error.code === 403) {
-        socket.emit('api-2fa', '', (err, data) => {
-          this.log(data);
+      if (response.error.code === 403) {
+        socket.emit('api-2fa', '', (err, errData) => {
+          this.log(errData);
         });
       } else {
-        socket.emit('api-error', 'API login failed', (err, data) => {
-          this.log(data);
+        socket.emit('api-error', 'API login failed', (err, errData) => {
+          this.log(errData);
         });
       }
     }
   }
+
 };

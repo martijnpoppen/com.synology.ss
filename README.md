@@ -31,6 +31,6 @@ Adds support to Homey for Camera's available in Synology Surveillance Station.
 
 ## Troubleshooting
 
-#### Session/Connection is lost / Buffer error
+#### Session/Connection is lost
 * Problem: When your Synology is rebooted all sessions are gone.
-* Solution: Restart this app
+* Solution: Go to the devices settings/maintenance and try to repair.

@@ -20,12 +20,14 @@ Installatie
  Selecteer je apparaat
  Klaar!
 
+Opnieuw verbinding maken / Repareren
+ Ga naar de instellingen van je apparaat, kies "Onderhoud" en daarna "Probeer te repareren".
+
 Getest met
  DSM 6.2.2-24922 Update 4
  Surveillance Station 8.2.6-6009
  Homey 3.2.0+
 
 Bekende problemen
-Session/Connection is lost / Buffer error
- Probleem: Wanneer je Synology herstart dan zijn de sessie gegevens niet meer valide. De app krijgt hiervan geen melding.
- Oplossing: Herstart de app op Homey
+ Probleem: Wanneer je Synology herstart dan is de connectie met je apparaat verbroken.
+ Oplossing:  Ga naar de instellingen van je apparaat, kies "Onderhoud" en daarna "Probeer te repareren".

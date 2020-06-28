@@ -2,12 +2,13 @@
 
 const Homey = require('homey');
 const fetch = require('node-fetch');
-const { ManagerCloud } = require('homey');
-const querystring = require('querystring');
+const DeviceBase = require('../../lib/devicebase');
 
-class StationDevice extends Homey.Device {
+class StationDevice extends DeviceBase {
+
   async onInit() {
     this.log('init device');
+    this.setUnavailable('initializing').catch(this.error);
 
     const data = this.getData();
     const settings = this.getSettings();
@@ -15,25 +16,11 @@ class StationDevice extends Homey.Device {
     this.log(data);
     this.log(settings);
 
-    try {
-      // get new session id
-      const sid = await this.getSid(settings);
-      this.log(`set sid: ${sid}`);
+    await this.migrate();
 
-      // set new sid to store
-      this.setStoreValue('sid', sid);
-    } catch (e) {
-      this.error(e.message);
-      this.setUnavailable('Cannot connect to Synology');
-      return;
-    }
-
-    // get/set current state
-    this.setCurrentState(settings);
-
-    this.registerCapabilityListener('home_mode', async (value) => {
+    this.registerCapabilityListener('home_mode', async value => {
       this.log(`set home mode: ${value.toString()}`);
-      this.setHomeMode(value, settings);
+      this.setHomeMode(value);
       return true;
     });
 
@@ -41,7 +28,7 @@ class StationDevice extends Homey.Device {
     setHomeModeOnAction
       .register()
       .registerRunListener(async () => {
-        this.setHomeMode(true, settings); // Promise<void>
+        this.setHomeMode(true); // Promise<void>
         return true;
       });
 
@@ -49,141 +36,101 @@ class StationDevice extends Homey.Device {
     setHomeModeOffAction
       .register()
       .registerRunListener(async () => {
-        this.setHomeMode(false, settings);
+        this.setHomeMode(false);
         return true;
       });
 
-    this.setAvailable();
+    // get/set current state
+    this.setCurrentState()
+      .then(() => {
+        this.setAvailable().catch(this.error);
+      })
+      .catch(err => {
+        this.pairException();
+        this.log(err);
+      });
   }
 
   async onAdded() {
     this.log('on added');
 
-    const settings = this.getSettings();
-
     // Home Mode On rule
-    const ruleOn = await this.getHomeModeRule(settings, 'on');
+    const ruleOn = await this.getHomeModeRule('on');
     if (ruleOn !== false) {
       // enable rule
-      await this.enableActionRule(ruleOn, settings);
+      await this.enableActionRule(ruleOn);
     } else {
       // add action rule
-      await this.createHomeModeRule(settings, 'on');
+      await this.createHomeModeRule('on');
     }
 
     // Home Mode Off rule
-    const ruleOff = await this.getHomeModeRule(settings, 'off');
+    const ruleOff = await this.getHomeModeRule('off');
     if (ruleOff !== false) {
       // enable rule
-      await this.enableActionRule(ruleOff, settings);
+      await this.enableActionRule(ruleOff);
     } else {
       // add action rule
-      await this.createHomeModeRule(settings, 'off');
+      await this.createHomeModeRule('off');
     }
   }
 
   onDeleted() {
     this.log('on deleted');
+    // delete home mode rules
+    this.deleteHomeModeRules();
+  }
 
+  async setPairData(protocol, host, port, sid) {
+    // store data
+    await this.storePairData(protocol, host, port, sid);
+    // set available
+    this.setAvailable().catch(this.error);
+  }
+
+  async migrate() {
+    this.log('migrate device');
+
+    const appVersion = Homey.manifest.version;
+    const deviceVersion = this.getStoreValue('version');
     const settings = this.getSettings();
 
-    // delete home mode rules
-    this.deleteHomeModeRules(settings);
-  }
+    this.log(appVersion);
+    this.log(deviceVersion);
 
-  async onSettings(oldSettingsObj, newSettingsObj, changedKeysArr) {
-    this.log('onSettings');
-    this.log(oldSettingsObj);
-    this.log(newSettingsObj);
-    this.log(changedKeysArr);
+    if (appVersion === deviceVersion) {
+      // same version, no migration
+      return true;
+    }
 
-    if (changedKeysArr.includes('protocol')
-        || changedKeysArr.includes('hostname')
-        || changedKeysArr.includes('port')
-        || changedKeysArr.includes('account')
-        || changedKeysArr.includes('password')
-    ) {
-      try {
-        this.log('try to get new sid');
-        // get new session id
-        const sid = await this.getSid(newSettingsObj);
-        this.log(`new sid: ${sid}`);
-        // unset old value
-        this.unsetStoreValue('sid');
-        // set new sid to store
-        this.setStoreValue('sid', sid);
-
-        if (this.getAvailable() === false) {
-          this.setAvailable();
+    switch (appVersion) {
+      case '2.1.0':
+        if (settings.protocol !== null) {
+          const sid = this.getStoreValue('sid');
+          // copy host settings to store
+          await this.storePairData(settings.protocol, settings.host, settings.port, sid);
+          this.log('host settings copied to store');
+          // remove api settings
+          settings.protocol = null;
+          settings.host = null;
+          settings.port = null;
+          settings.account = null;
+          settings.passwd = null;
+          this.log(settings);
+          this.setSettings(settings).catch(this.error);
+          this.log('api settings removed');
         }
-      } catch (e) {
-        this.log(e.message);
-        throw new Error('Credentials are not ok');
-      }
+        break;
+      default:
+        this.log('nothing to migrate');
     }
 
-    // reset reset
-    const that = this;
-    if (newSettingsObj.reset_session === true) {
-      setTimeout(() => { that.setSettings({ reset_session: false }); }, 3000);
-    }
+    // set version
+    this.setStoreValue('version', appVersion).catch(this.error);
+    return true;
   }
 
-  /**
-     * get new SID / Session ID
-     * @param settings
-     */
-  async getSid(settings) {
-    this.log('get sid');
-    const urlq = {
-      api: 'SYNO.API.Auth',
-      method: 'Login',
-      version: 6,
-      session: 'SurveillanceStation',
-      account: settings.account,
-      passwd: settings.passwd,
-      format: 'sid',
-    };
-
-    const url = `${settings.protocol}://${settings.host}:${settings.port}/webapi/auth.cgi?${querystring.stringify(urlq)}`;
-
-    this.log(url);
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    }).then((response) => {
-      return response.json();
-    }).then((json) => {
-      return json;
-    }).catch((error) => {
-      this.error('There has been a problem with your fetch operation:', error);
-    });
-
-    this.log('response');
-    this.log(response);
-
-    if (response.data !== undefined && response.data.sid !== undefined) {
-      return response.data.sid;
-    }
-    throw new Error('no sid found');
-  }
-
-  async getHomeyAddress() {
-    this.log('get homey address');
-
-    const homeyId = await ManagerCloud.getHomeyId();
-    const address = `https://${homeyId}.connect.athom.com`;
-
-    this.log(address);
-
-    return address;
-  }
-
-  async getHomeModeRule(settings, state) {
+  async getHomeModeRule(state) {
     this.log('get home mode rule');
     const ruleHomeMode = this.getStoreValue(`rule_home_mode_${state}`);
     this.log(ruleHomeMode);
@@ -194,10 +141,10 @@ class StationDevice extends Homey.Device {
     }
 
     // get from synology
-    const rules = await this.getActionRules(settings);
+    const rules = await this.getActionRules();
     let homeModeRule = null;
 
-    Object.keys(rules).forEach((key) => {
+    Object.keys(rules).forEach(key => {
       const rule = rules[key];
       if (rule.ruleId === ruleHomeMode) {
         homeModeRule = rule;
@@ -211,19 +158,18 @@ class StationDevice extends Homey.Device {
     return false;
   }
 
-  async createHomeModeRule(settings, state) {
+  async createHomeModeRule(state) {
     this.log(`create home mode rule ${state}`);
 
     const homeyaddress = await this.getHomeyAddress();
     const data = this.getData();
     const deviceApiHomeModeUrl = `${homeyaddress}/api/app/com.synology.ss/homemode_${state}/${data.id}`;
-    const sid = this.getStoreValue('sid');
     const evtId = (state === 'on') ? 20 : 21;
-    const urlq = {
+
+    const qs = {
       api: 'SYNO.SurveillanceStation.ActionRule',
       method: 'Save',
       version: 3,
-      _sid: sid,
       name: `"Homey Home Mode ${state}"`,
       multiRuleId: -1,
       ruleType: 0,
@@ -234,21 +180,19 @@ class StationDevice extends Homey.Device {
       actions: `[{"id":-1,"actSrc":1,"actDsId":0,"actDevId":-1,"actId":-1,"actItemId":-1,"actTimes":1,"actTimeUnit":1,"actTimeDur":10,"actRetPos":-2,"extUrl":"${deviceApiHomeModeUrl}","userName":"","password":"","iftttKey":"","iftttEvent":"","param1":"","param2":"","param3":"","webhookReqMethod":0,"httpContentType":0,"httpBody":""}]`,
       actSchedule: '"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"',
     };
-    const url = `${settings.protocol}://${settings.host}:${settings.port}/webapi/entry.cgi?${querystring.stringify(urlq)}`;
 
-    this.log(url);
-
-    const response = await fetch(url, {
+    const apiUrl = this.getAPIUrl('/webapi/entry.cgi', qs);
+    const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-    }).then((response) => {
-      return response.json();
-    }).then((json) => {
+    }).then(res => {
+      return res.json();
+    }).then(json => {
       return json;
-    }).catch((error) => {
+    }).catch(error => {
       this.error('There has been a problem with your fetch operation:', error);
       throw new Error(error);
     });
@@ -256,22 +200,22 @@ class StationDevice extends Homey.Device {
     this.log('response');
     this.log(response);
 
-    const ruleHomeMode = await this.getActionRuleHomeMode(settings, deviceApiHomeModeUrl);
+    const ruleHomeMode = await this.getActionRuleHomeMode(deviceApiHomeModeUrl);
 
     // save rule id
     this.setStoreValue(`rule_home_mode_${state}`, ruleHomeMode);
   }
 
-  async getActionRuleHomeMode(settings, extUrl) {
+  async getActionRuleHomeMode(extUrl) {
     this.log('get action rule home mode');
 
-    const actRule = await this.getActionRules(settings);
+    const actRule = await this.getActionRules();
 
     let ruleMatch = 0;
-    Object.keys(actRule).forEach((i) => {
+    Object.keys(actRule).forEach(i => {
       const rule = actRule[i];
 
-      Object.keys(rule.events).forEach((e) => {
+      Object.keys(rule.events).forEach(e => {
         const event = rule.events[e];
 
         this.log(event.evtDevName);
@@ -279,15 +223,15 @@ class StationDevice extends Homey.Device {
         this.log(event.evtId);
       });
 
-      Object.keys(rule.actions).forEach((a) => {
+      Object.keys(rule.actions).forEach(a => {
         const action = rule.actions[a];
 
         if (action.extUrl === extUrl) {
           // rule found!
           this.log(`home mode rule found: ${rule.ruleId}`);
           ruleMatch = rule.ruleId;
-          return ruleMatch;
         }
+        return ruleMatch;
       });
     });
 
@@ -298,78 +242,8 @@ class StationDevice extends Homey.Device {
     throw new Error('no rule found');
   }
 
-  async enableActionRule(rule, settings) {
-    this.log('enable rule');
-
-    const sid = this.getStoreValue('sid');
-    const urlq = {
-      api: 'SYNO.SurveillanceStation.ActionRule',
-      method: 'Enable',
-      version: 1,
-      _sid: sid,
-      idList: rule.ruleId,
-    };
-    const url = `${settings.protocol}://${settings.host}:${settings.port}/webapi/entry.cgi?${querystring.stringify(urlq)}`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    }).then((response) => {
-      return response.json();
-    }).then((json) => {
-      return json;
-    }).catch((error) => {
-      this.error('There has been a problem with your fetch operation:', error);
-      throw new Error(error);
-    });
-
-    this.log('response');
-    this.log(response);
-
-    if (response.success === undefined || response.success === false) {
-      throw new Error('response from synology is not ok');
-    }
-  }
-
-  async getActionRules(settings) {
-    this.log('getActionRules');
-    const sid = this.getStoreValue('sid');
-    const urlq = {
-      api: 'SYNO.SurveillanceStation.ActionRule',
-      method: 'List',
-      version: 3,
-      _sid: sid,
-    };
-    const url = `${settings.protocol}://${settings.host}:${settings.port}/webapi/entry.cgi?${querystring.stringify(urlq)}`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    }).then((response) => {
-      return response.json();
-    }).then((json) => {
-      return json;
-    }).catch((error) => {
-      this.error('There has been a problem with your fetch operation:', error);
-      throw new Error(error);
-    });
-
-    this.log('response');
-    this.log(response);
-
-    if (response.data === undefined) {
-      throw new Error('no rules found');
-    }
-
-    return response.data.actRule;
-  }
-
   // add action rule
-  async deleteHomeModeRules(settings) {
+  async deleteHomeModeRules() {
     this.log('delete home mode rules');
     const ruleList = [];
 
@@ -393,29 +267,24 @@ class StationDevice extends Homey.Device {
     const idList = ruleList.join(',');
     this.log(idList);
 
-    const sid = this.getStoreValue('sid');
-    const urlq = {
+    const qs = {
       api: 'SYNO.SurveillanceStation.ActionRule',
       method: 'Delete',
       version: 1,
       idList,
-      _sid: sid,
     };
-    const url = `${settings.protocol}://${settings.host}:${settings.port}/webapi/entry.cgi?${querystring.stringify(urlq)}`;
-
-    this.log(url);
-
-    const response = await fetch(url, {
+    const apiUrl = this.getAPIUrl('/webapi/entry.cgi', qs);
+    const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-    }).then((response) => {
-      return response.json();
-    }).then((json) => {
+    }).then(res => {
+      return res.json();
+    }).then(json => {
       return json;
-    }).catch((error) => {
+    }).catch(error => {
       this.error('There has been a problem with your fetch operation:', error);
       throw new Error(error);
     });
@@ -424,28 +293,26 @@ class StationDevice extends Homey.Device {
     this.log(response);
   }
 
-  async setCurrentState(settings) {
+  async setCurrentState() {
     this.log('set currrent state');
 
-    const sid = this.getStoreValue('sid');
-    const urlq = {
+    const qs = {
       api: 'SYNO.SurveillanceStation.HomeMode',
       method: 'GetInfo',
       version: 1,
-      _sid: sid,
     };
-    const url = `${settings.protocol}://${settings.host}:${settings.port}/webapi/entry.cgi?${querystring.stringify(urlq)}`;
-    const response = await fetch(url, {
+    const apiUrl = this.getAPIUrl('/webapi/entry.cgi', qs);
+    const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-    }).then((response) => {
-      return response.json();
-    }).then((json) => {
+    }).then(res => {
+      return res.json();
+    }).then(json => {
       return json;
-    }).catch((error) => {
+    }).catch(error => {
       this.error('There has been a problem with your fetch operation:', error);
       throw new Error(error);
     });
@@ -469,29 +336,27 @@ class StationDevice extends Homey.Device {
       .catch(this.error);
   }
 
-  async setHomeMode(value, settings) {
+  async setHomeMode(value) {
     this.log('set home mode');
 
-    const sid = this.getStoreValue('sid');
-    const urlq = {
+    const qs = {
       api: 'SYNO.SurveillanceStation.HomeMode',
       method: 'Switch',
       version: 1,
-      _sid: sid,
       on: value,
     };
-    const url = `${settings.protocol}://${settings.host}:${settings.port}/webapi/entry.cgi?${querystring.stringify(urlq)}`;
-    const response = await fetch(url, {
+    const apiUrl = this.getAPIUrl('/webapi/entry.cgi', qs);
+    const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-    }).then((response) => {
-      return response.json();
-    }).then((json) => {
+    }).then(res => {
+      return res.json();
+    }).then(json => {
       return json;
-    }).catch((error) => {
+    }).catch(error => {
       this.error('There has been a problem with your fetch operation:', error);
       throw new Error(error);
     });
@@ -515,6 +380,7 @@ class StationDevice extends Homey.Device {
     this.setCapabilityValue('home_mode', value)
       .catch(this.error);
   }
+
 }
 
 module.exports = StationDevice;

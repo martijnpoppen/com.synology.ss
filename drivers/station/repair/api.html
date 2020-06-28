@@ -1,5 +1,5 @@
 <script>
-    Homey.setTitle( Homey.__('pair.api.title') );
+    Homey.setTitle( Homey.__('repair.api.title') );
 
     const api_form = document.getElementById('api-form');
     api_form.onsubmit = submit;
@@ -35,12 +35,14 @@
     }
 
     Homey.on('station-api-ok', function( message, callback ){
-        Homey.emit('sid', { sid: message }, function(err, result){
-            if(result===true) {
-                Homey.showView('list_devices');
-            }
-            Homey.hideLoadingOverlay();
-        });
+      Homey.emit('sid', { sid: message }, function(err, result){
+        if(result===true) {
+          Homey.confirm( Homey.__('repair.api.done'), 'info', function(){
+            Homey.showView('done');
+          });
+        }
+        Homey.hideLoadingOverlay();
+      });
     });
 
     Homey.on('station-api-error', function( message, callback ){
@@ -87,7 +89,7 @@
         font-size: 12px;
     }
 </style>
-<h1 data-i18n="pair.api.title">Synology</h1>
+<h1 data-i18n="repair.api.title">Synology</h1>
 <div class="hy-tmpl-api-logo">
     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 128 128" xml:space="preserve"><style type="text/css">
 	.st0{display:none;}

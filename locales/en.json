@@ -19,6 +19,10 @@
     },
     "motion": {
       "title": "Motion Detection"
+    },
+    "lost": "Connection is expired. Please repair.",
+    "station": {
+      "title": "Surveillance Station"
     }
   },
   "repair": {

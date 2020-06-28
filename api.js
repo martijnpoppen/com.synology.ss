@@ -44,7 +44,7 @@ module.exports = [
       Homey.app.log('params');
       Homey.app.log(args.params.id);
 
-      const id = args.params.id;
+      const { id } = args.params;
 
       try {
         const device = ManagerDrivers.getDriver('station').getDevice({ id });
@@ -71,7 +71,7 @@ module.exports = [
       Homey.app.log('params');
       Homey.app.log(args.params.id);
 
-      const id = args.params.id;
+      const { id } = args.params;
 
       try {
         const device = ManagerDrivers.getDriver('station').getDevice({ id });

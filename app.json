@@ -1,6 +1,6 @@
 {
   "id": "com.synology.ss",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "compatibility": ">=4.1.0",
   "sdk": 2,
   "name": {
@@ -73,66 +73,6 @@
         {
           "type": "group",
           "label": {
-            "en": "Synology"
-          },
-          "children": [
-            {
-              "id": "protocol",
-              "type": "dropdown",
-              "label": {
-                "en": "Http/Https"
-              },
-              "value": "https",
-              "values": [
-                {
-                  "id": "http",
-                  "label": "http"
-                },
-                {
-                  "id": "https",
-                  "label": "https"
-                }
-              ]
-            },
-            {
-              "id": "host",
-              "type": "text",
-              "label": {
-                "en": "Hostname",
-                "nl": "Host"
-              },
-              "value": "mynas.synology.me"
-            },
-            {
-              "id": "port",
-              "type": "number",
-              "label": {
-                "en": "Port"
-              },
-              "value": 5001
-            },
-            {
-              "id": "account",
-              "type": "text",
-              "label": {
-                "en": "Account"
-              },
-              "value": "homey"
-            },
-            {
-              "id": "passwd",
-              "type": "password",
-              "label": {
-                "en": "Password",
-                "nl": "Wachtwoord"
-              },
-              "value": "*******"
-            }
-          ]
-        },
-        {
-          "type": "group",
-          "label": {
             "en": "Motion Detection"
           },
           "children": [
@@ -197,70 +137,13 @@
         "small": "/drivers/station/assets/images/small.png"
       },
       "capabilities": ["home_mode"],
-      "settings": [
-        {
-          "type": "group",
-          "label": {
-            "en": "Synology"
-          },
-          "children": [
-            {
-              "id": "protocol",
-              "type": "dropdown",
-              "label": {
-                "en": "Http/Https"
-              },
-              "value": "https",
-              "values": [
-                {
-                  "id": "http",
-                  "label": "http"
-                },
-                {
-                  "id": "https",
-                  "label": "https"
-                }
-              ]
-            },
-            {
-              "id": "host",
-              "type": "text",
-              "label": {
-                "en": "Hostname",
-                "nl": "Host"
-              },
-              "value": "mynas.synology.me"
-            },
-            {
-              "id": "port",
-              "type": "number",
-              "label": {
-                "en": "Port"
-              },
-              "value": 5001
-            },
-            {
-              "id": "account",
-              "type": "text",
-              "label": {
-                "en": "Account"
-              },
-              "value": "homey"
-            },
-            {
-              "id": "passwd",
-              "type": "password",
-              "label": {
-                "en": "Password",
-                "nl": "Wachtwoord"
-              },
-              "value": "*******"
-            }
-          ]
-        }],
+      "settings": [],
       "pair": [
         {
           "id": "api"
+        },
+        {
+          "id": "2fa"
         },
         {
           "id": "list_devices",
@@ -272,6 +155,18 @@
         {
           "id": "add_devices",
           "template": "add_devices"
+        }
+      ],
+      "repair": [
+        {
+          "id": "api"
+        },
+        {
+          "id": "2fa"
+        },
+        {
+          "id": "done",
+          "template": "done"
         }
       ]
     }
