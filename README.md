@@ -24,13 +24,14 @@ Adds support to Homey for Camera's available in Synology Surveillance Station.
 * Select your camera
 * Done!
 
+## Reconnect/Repair your device
+* Go to the devices settings, choose "Maintenance actions" and then "Repair".
+
 ## Tested with
 * DSM 6.2.2-24922 Update 4
 * Surveillance Station 8.2.6-6009
 * Homey 3.2.0+
 
 ## Troubleshooting
-
-#### Session/Connection is lost
-* Problem: When your Synology is rebooted all sessions are gone.
-* Solution: Go to the devices settings/maintenance and try to repair.
+* Problem: When your Synology reboots, the connection is lost with your device.
+* Solution: Go to the devices settings, choose "Maintenance actions" and then "Repair".
