@@ -15,5 +15,9 @@
   "2.0.0": {
     "en": "Home Mode is now available (add surveillance station as new device), small bugfixes",
     "nl": "Home Mode is nu beschikbaar (voeg surveillance station toe als apparaat), bugfixes"
+  },
+  "2.1.0": {
+    "en": "Support for 2-factor authentication and Homey's repair function",
+    "nl": "Ondersteuning voor 2-staps verificatie en Homey's onderhoudsmethode"
   }
 }
