@@ -13,8 +13,6 @@ class SynoCameraDevice extends DeviceBase {
 
     this.setUnavailable('initializing').catch(this.error);
 
-    // this.setStoreValue('version','2.0.0');
-
     const data = this.getData();
     const settings = this.getSettings();
 
@@ -44,6 +42,25 @@ class SynoCameraDevice extends DeviceBase {
     }
 
     this.added = false;
+
+    // flow actions
+    const extRecordStartAction = new Homey.FlowCardAction('ext_record_start');
+    extRecordStartAction
+      .register()
+      .registerRunListener(async args => {
+        const device = args.camera;
+        device.externalRecordStart().catch(this.error);
+        return true;
+      });
+
+    const extRecordStopAction = new Homey.FlowCardAction('ext_record_stop');
+    extRecordStopAction
+      .register()
+      .registerRunListener(async args => {
+        const device = args.camera;
+        device.externalRecordStop().catch(this.error);
+        return true;
+      });
   }
 
   migrate() {
@@ -419,6 +436,49 @@ class SynoCameraDevice extends DeviceBase {
       return ruleMatch;
     }
     throw new Error('no rule found');
+  }
+
+  async externalRecordStart() {
+    this.externalRecord('start');
+  }
+
+  async externalRecordStop() {
+    this.externalRecord('stop');
+  }
+
+  async externalRecord(value) {
+    this.log(`externalRecord ${value}`);
+
+    const data = this.getData();
+    const qs = {
+      api: 'SYNO.SurveillanceStation.ExternalRecording',
+      method: 'Record',
+      cameraId: data.id,
+      version: 1,
+      action: value,
+    };
+    const apiUrl = this.getAPIUrl('/webapi/entry.cgi', qs);
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    }).then(res => {
+      return res.json();
+    }).then(json => {
+      return json;
+    }).catch(error => {
+      this.error('There has been a problem with your fetch operation:', error);
+      throw new Error(error);
+    });
+
+    this.log('response');
+    this.log(response);
+
+    if (response.success === undefined || response.success === false) {
+      throw new Error('response from synology is not ok');
+    }
   }
 
 }

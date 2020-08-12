@@ -11,6 +11,7 @@ Home Mode
 Flows
  Action to update camera image. This can be used in doorbell flows.
  Actions to manager the Home Mode (only for Surveillance Station).
+ Actions for recording (start / stop).
 
 Getting Started
  Install the app on Homey
@@ -31,3 +32,6 @@ Tested with
 Troubleshooting
  Problem: When your Synology reboots, the connection is lost with your device.
  Solution: Go to the devices settings, choose "Maintenance actions" and then "Repair".
+
+Note
+ This app is not officially maintained by Synology.

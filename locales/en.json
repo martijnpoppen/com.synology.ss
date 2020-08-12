@@ -6,8 +6,9 @@
   },
   "pair": {
     "api": {
-        "title": "Synology",
+        "title": "Connect your Synology Surveillance Station",
         "description": "Provide the location and credentials to connect to your NAS and get access to Surveillance Station.",
+        "otp_title": "Follow these steps for 2-Step Verification.",
         "otp_description": "Your account has been configured to use 2-Step Verification. Type your 6-digit code below to verify this action.",
         "submit": "Login",
         "label_hostname": "Hostname",
@@ -18,7 +19,9 @@
         "placeholder_otp_code": "Enter 6-digit code"
     },
     "motion": {
-      "title": "Motion Detection"
+      "title": "Would you like to enable motion detection?",
+      "description": "Would you like to enable motion detection? This will create an Actionrule at the Surveillance Station.",
+      "footnote": "You need to have write permissions for the Surveillance Station to make this work."
     },
     "lost": "Connection is expired. Please repair.",
     "station": {
@@ -27,7 +30,7 @@
   },
   "repair": {
     "api": {
-      "title": "Reconnect",
+      "title": "Reconnect your Synology Surveillance Station",
       "done": "Great! Your device is connected again."
     }
   }

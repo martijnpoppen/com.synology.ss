@@ -1,7 +1,6 @@
 'use strict';
 
 const Homey = require('homey');
-const querystring = require('querystring');
 const fetch = require('node-fetch');
 const crypto = require('crypto');
 
@@ -72,7 +71,7 @@ module.exports = class StationDriver extends Homey.Driver {
       // set data to api settings
       api = data;
 
-      this.validateAPI(socket, data, this);
+      this.validateAPI(socket, data);
       callback(null, true);
     });
 
@@ -80,7 +79,7 @@ module.exports = class StationDriver extends Homey.Driver {
       // set data to api settings
       api.otp_code = data.otp_code;
 
-      this.validateAPI(socket, api, this);
+      this.validateAPI(socket, api);
       callback(null, true);
     });
 
@@ -99,30 +98,29 @@ module.exports = class StationDriver extends Homey.Driver {
     this.log('validateAPI');
     this.log(data);
 
-    const urlq = {
-      api: 'SYNO.API.Auth',
-      method: 'Login',
-      version: 6,
-      session: 'SurveillanceStation',
-      account: data.account,
-      passwd: data.passwd,
-      format: 'sid',
-    };
+    const params = new URLSearchParams();
+    params.append('api', 'SYNO.API.Auth');
+    params.append('method', 'Login');
+    params.append('version', 6);
+    params.append('session', 'SurveillanceStation');
+    params.append('account', data.account);
+    params.append('passwd', data.passwd);
+    params.append('format', 'sid');
 
     // one time password
     if (data.otp_code !== undefined && data.otp_code.length > 0) {
-      urlq.otp_code = data.otp_code;
+      params.append('otp_code', data.otp_code);
     }
 
-    const url = `${data.protocol}://${data.host}:${data.port}/webapi/auth.cgi?${querystring.stringify(urlq)}`;
+    const url = `${data.protocol}://${data.host}:${data.port}/webapi/auth.cgi`;
 
     this.log(url);
     const response = await fetch(url, {
-      method: 'GET',
+      method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
+      body: params,
     }).then(res => {
       return res.json();
     }).then(json => {

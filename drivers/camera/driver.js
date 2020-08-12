@@ -138,30 +138,29 @@ module.exports = class CameraDriver extends Homey.Driver {
     this.log('validateAPI');
     this.log(data);
 
-    const urlq = {
-      api: 'SYNO.API.Auth',
-      method: 'Login',
-      version: 6,
-      session: 'SurveillanceStation',
-      account: data.account,
-      passwd: data.passwd,
-      format: 'sid',
-    };
+    const params = new URLSearchParams();
+    params.append('api', 'SYNO.API.Auth');
+    params.append('method', 'Login');
+    params.append('version', 6);
+    params.append('session', 'SurveillanceStation');
+    params.append('account', data.account);
+    params.append('passwd', data.passwd);
+    params.append('format', 'sid');
 
     // one time password
     if (data.otp_code !== undefined && data.otp_code.length > 0) {
-      urlq.otp_code = data.otp_code;
+      params.append('otp_code', data.otp_code);
     }
 
-    const url = `${data.protocol}://${data.host}:${data.port}/webapi/auth.cgi?${querystring.stringify(urlq)}`;
+    const url = `${data.protocol}://${data.host}:${data.port}/webapi/auth.cgi`;
 
     this.log(url);
     const response = await fetch(url, {
-      method: 'GET',
+      method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
+      body: params,
     }).then(res => {
       return res.json();
     }).then(json => {

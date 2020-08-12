@@ -21,10 +21,12 @@ module.exports = [
 
       try {
         const device = ManagerDrivers.getDriver('camera').getDevice({ id });
-        Homey.app.log(device);
 
-        if (device !== undefined && device !== null) {
-          device.onMotion();
+        if (device !== undefined && device !== null && !(device instanceof Error)) {
+          device.onMotion().catch(Homey.app.error);
+        }
+        else {
+          Homey.app.log('device is not a camera');
         }
       } catch (e) {
         Homey.app.log('no devices found');
@@ -50,8 +52,8 @@ module.exports = [
         const device = ManagerDrivers.getDriver('station').getDevice({ id });
         Homey.app.log(device);
 
-        if (device !== undefined && device !== null) {
-          device.onHomeModeStatusChange(true);
+        if (device !== undefined && device !== null && !(device instanceof Error)) {
+          device.onHomeModeStatusChange(true).catch(Homey.app.error);
         }
       } catch (e) {
         Homey.app.log('no devices found');
@@ -77,8 +79,8 @@ module.exports = [
         const device = ManagerDrivers.getDriver('station').getDevice({ id });
         Homey.app.log(device);
 
-        if (device !== undefined && device !== null) {
-          device.onHomeModeStatusChange(false);
+        if (device !== undefined && device !== null && !(device instanceof Error)) {
+          device.onHomeModeStatusChange(false).catch(Homey.app.error);
         }
       } catch (e) {
         Homey.app.log('no devices found');

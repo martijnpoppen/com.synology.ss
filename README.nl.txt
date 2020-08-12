@@ -11,6 +11,7 @@ Home Mode
 Flows
  Actie om de afbeeding van de camera te updaten. Kan bijvoorbeeld gebruikt vlak voor het versturen van de afbeelding.
  Acties om de Home Mode te beheren (alleen voor Surveillance Station).
+ Acties om een opname te starten en stoppen.
 
 Installatie
  Installeer de app op je Homey
@@ -31,3 +32,6 @@ Getest met
 Bekende problemen
  Probleem: Wanneer je Synology herstart dan is de connectie met je apparaat verbroken.
  Oplossing:  Ga naar de instellingen van je apparaat, kies "Onderhoud" en daarna "Probeer te repareren".
+
+Note
+ Dit is geen officiele Synology app.

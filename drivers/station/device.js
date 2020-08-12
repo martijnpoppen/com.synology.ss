@@ -27,16 +27,18 @@ class StationDevice extends DeviceBase {
     const setHomeModeOnAction = new Homey.FlowCardAction('home_mode_on');
     setHomeModeOnAction
       .register()
-      .registerRunListener(async () => {
-        this.setHomeMode(true); // Promise<void>
+      .registerRunListener(async args => {
+        const device = args.station;
+        device.setHomeMode(true); // Promise<void>
         return true;
       });
 
     const setHomeModeOffAction = new Homey.FlowCardAction('home_mode_off');
     setHomeModeOffAction
       .register()
-      .registerRunListener(async () => {
-        this.setHomeMode(false);
+      .registerRunListener(async args => {
+        const device = args.station;
+        device.setHomeMode(false);
         return true;
       });
 

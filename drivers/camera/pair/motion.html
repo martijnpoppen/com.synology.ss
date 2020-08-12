@@ -1,8 +1,9 @@
+<link href="../assets/css/styles.css" rel="stylesheet" type="text/css"/>
 <script>
-    Homey.setTitle( Homey.__('pair.motion.title') );
-
     const motion_form = document.getElementById('motion-form');
     motion_form.onsubmit = submit;
+
+    window.scrollTo(0, 0);
 
     function submit(event) {
 
@@ -30,102 +31,10 @@
         event.preventDefault();
     }
 </script>
-<style>
-    svg {
-        width: 30%;
-        margin-left: 35%;
-    }
-
-    .hy-tmpl-api-logo {
-        margin: 5px 0;
-    }
-
-    .hy-tmpl-motion-row {
-        text-align: center;
-        padding: 0 0 15px 0;
-    }
-
-    h1,p {
-        text-align: center;
-    }
-
-    p {
-        font-size: 12px;
-    }
-
-    .footnote {
-        color: gray;
-    }
-
-    .switch {
-        position: relative;
-        display: inline-block;
-        width: 60px;
-        height: 34px;
-    }
-
-    .switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-
-    .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #ccc;
-        -webkit-transition: .4s;
-        transition: .4s;
-    }
-
-    .slider:before {
-        position: absolute;
-        content: "";
-        height: 26px;
-        width: 26px;
-        left: 4px;
-        bottom: 4px;
-        background-color: white;
-        -webkit-transition: .4s;
-        transition: .4s;
-    }
-
-    input:checked + .slider {
-        background-color: #00c139;
-    }
-
-    input:focus + .slider {
-        box-shadow: 0 0 1px #00c139;
-    }
-
-    input:checked + .slider:before {
-        -webkit-transform: translateX(26px);
-        -ms-transform: translateX(26px);
-        transform: translateX(26px);
-    }
-
-    /* Rounded sliders */
-    .slider.round {
-        border-radius: 34px;
-    }
-
-    .slider.round:before {
-        border-radius: 50%;
-    }
-
-</style>
-<h1>Motion Detection</h1>
 <div class="hy-tmpl-api-logo">
-    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.2" baseProfile="tiny" x="0px" y="0px" viewBox="0 0 100 100" xml:space="preserve"><polygon points="53.838,37.5 40.955,37.5 35.264,48.882 39.736,51.118 44.045,42.5 48.455,42.5 40.955,57.5 32.5,57.5 32.5,62.5   44.045,62.5 47.5,55.59 55.264,71.118 59.736,68.882 50.295,50 52.809,44.971 56.162,50 67.5,50 67.5,45 58.838,45 "/><path d="M52.5,32.5c0,2.757,2.243,5,5,5s5-2.243,5-5s-2.243-5-5-5S52.5,29.743,52.5,32.5z"/><path d="M23.484,23.484l-5.303-5.304C9.681,26.68,5,37.98,5,50s4.681,23.32,13.181,31.82l5.303-5.304  C16.401,69.434,12.5,60.017,12.5,50S16.401,30.566,23.484,23.484z"/><path d="M76.516,23.484C83.599,30.566,87.5,39.983,87.5,50s-3.901,19.434-10.984,26.516l5.303,5.304C90.319,73.32,95,62.02,95,50  s-4.681-23.32-13.181-31.82L76.516,23.484z"/><path d="M27.019,27.019c-12.671,12.672-12.671,33.29,0,45.962l3.535-3.535c-10.722-10.723-10.722-28.169,0-38.892L27.019,27.019z"/><path d="M72.981,27.019l-3.535,3.535c10.722,10.723,10.722,28.169,0,38.892l3.535,3.535C85.652,60.309,85.652,39.691,72.981,27.019z  "/></svg>
+    <img class="my-svg" src="../assets/svg/motion.svg" alt="motion">
 </div>
-<p>
-    Would you like to enable motion detection?<br/>
-    This will create an Actionrule at the Surveillance Station.
-</p>
+<p data-i18n="pair.motion.description"></p>
 <form id="motion-form" class="hy-tmpl-motion-form" action="/" method="post">
     <div class="hy-tmpl-motion-row row">
         <label class="switch">
@@ -137,7 +46,5 @@
         <input class="hy-button hy-button-primary hy-button-fill hy-motion-submit button" type="submit" value="Volgende">
     </div>
 </form>
-<p class="footnote">
-    You need to have write permissions for the Surveillance Station to make this work.
-</p>
+<p class="footnote" data-i18n="pair.motion.footnote"></p>
 

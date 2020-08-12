@@ -19,5 +19,9 @@
   "2.1.0": {
     "en": "Support for 2-factor authentication and Homey's repair function",
     "nl": "Ondersteuning voor 2-staps verificatie en Homey's onderhoudsmethode"
+  },
+  "2.2.1": {
+    "en": "Added flow actions for recording (start/stop), fixes for pairing",
+    "nl": "Flow acties toegevoegd voor opname (start/stop), bugfixes bij installeren apparaten"
   }
 }

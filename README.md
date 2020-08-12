@@ -15,6 +15,7 @@ Adds support to Homey for Camera's available in Synology Surveillance Station.
 #### flows
 * Action to update camera image. This can be used in doorbell flows.
 * Actions to manager the Home Mode (only for Surveillance Station).
+* Actions for recording (start / stop).
 
 ## Getting Started
 * Install the app on Homey
@@ -35,3 +36,6 @@ Adds support to Homey for Camera's available in Synology Surveillance Station.
 ## Troubleshooting
 * Problem: When your Synology reboots, the connection is lost with your device.
 * Solution: Go to the devices settings, choose "Maintenance actions" and then "Repair".
+
+## Note
+* this app is not officially maintained by Synology.

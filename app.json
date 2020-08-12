@@ -1,6 +1,6 @@
 {
   "id": "com.synology.ss",
-  "version": "2.1.0",
+  "version": "2.2.1",
   "compatibility": ">=4.1.0",
   "sdk": 2,
   "name": {
@@ -23,6 +23,7 @@
   },
   "source": "https://github.com/marcschut002/athom.com.synology.ss",
   "homepage": "https://github.com/marcschut002/athom.com.synology.ss",
+  "homeyCommunityTopicId": 32737,
   "category": [
     "security"
   ],
@@ -212,6 +213,34 @@
             "name": "station",
             "type": "device",
             "filter": "driver_id=station"
+          }
+        ]
+      },
+      {
+        "id": "ext_record_start",
+        "title": {
+          "en": "Start Recording",
+          "nl": "Start Opname"
+        },
+        "args": [
+          {
+            "name": "camera",
+            "type": "device",
+            "filter": "driver_id=camera"
+          }
+        ]
+      },
+      {
+        "id": "ext_record_stop",
+        "title": {
+          "en": "Stop Recording",
+          "nl": "Stop Opname"
+        },
+        "args": [
+          {
+            "name": "camera",
+            "type": "device",
+            "filter": "driver_id=camera"
           }
         ]
       }
