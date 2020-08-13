@@ -379,8 +379,22 @@ class StationDevice extends DeviceBase {
       return;
     }
 
+    // set capability
     this.setCapabilityValue('home_mode', value)
       .catch(this.error);
+
+    // trigger flows
+    const device = this;
+    const tokens = {};
+    const state = {};
+
+    this._driver = this.getDriver();
+
+    if (value === false) {
+      this._driver.triggerHomeModeOff(device, tokens, state);
+    } else if (value === true) {
+      this._driver.triggerHomeModeOn(device, tokens, state);
+    }
   }
 
 }

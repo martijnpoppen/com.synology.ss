@@ -1,17 +1,24 @@
 Koppel je camera's van je Surveillance Station aan je Homey om bijvoorbeeld een snapshot te versturen wanneer de deurbel gaat.
 Bewegingsmeldingen worden door de Surveillance Station doorgegeven aan de Homey. Snel en efficient.
 
+Camera
+
 Bewegingsmelding
  Aan/uitzetten van bewegingsmelding bij het installeren van de camera en via de instellingen van de camera
  Bewegingsmelding wordt via Surveillance Station doorgegeven aan de Homey. Snel en efficient.
+
+Flows
+ Actie om de afbeeding van de camera te updaten. Kan bijvoorbeeld gebruikt vlak voor het versturen van de afbeelding.
+ Acties om een opname te starten en stoppen.
+
+Surveillance Station
 
 Home Mode
  Beheer je Home Mode via Homey. Voeg je Surveillance Station toe om dit te gebruiken.
 
 Flows
- Actie om de afbeeding van de camera te updaten. Kan bijvoorbeeld gebruikt vlak voor het versturen van de afbeelding.
- Acties om de Home Mode te beheren (alleen voor Surveillance Station).
- Acties om een opname te starten en stoppen.
+ Acties om de Home Mode te beheren
+ Triggers voor Home Mode (ingeschakeld / uitgeschakeld)
 
 Installatie
  Installeer de app op je Homey

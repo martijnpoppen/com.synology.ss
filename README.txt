@@ -1,17 +1,24 @@
 This app adds Surveillance Station camera's to your Homey so you can act on motion detection or get a snapshot when the doorbell rings.
 Motion detection is triggered by your Synology and the Homey gets notified. No manual steps needed.
 
+Camera
+
 Motion detection
  Enable/disable motion detection when installing device and in advanced camera settings
  Motion detection pushed by Surveillance Station
+
+Flows
+ Action to update camera image. This can be used in doorbell flows.
+ Actions for recording (start / stop).
+
+Surveillance Station
 
 Home Mode
  Manage your Home Mode by adding your Surveillance Station to Homey.
 
 Flows
- Action to update camera image. This can be used in doorbell flows.
- Actions to manager the Home Mode (only for Surveillance Station).
- Actions for recording (start / stop).
+ Actions to manage the Home Mode.
+ Triggers for Home Mode (enabled / disabled).
 
 Getting Started
  Install the app on Homey

@@ -6,6 +6,28 @@ const crypto = require('crypto');
 
 module.exports = class StationDriver extends Homey.Driver {
 
+  onInit() {
+    this._flowTriggerHomeModeOn = new Homey.FlowCardTriggerDevice('home_mode_on')
+      .register();
+
+    this._flowTriggerHomeModeOff = new Homey.FlowCardTriggerDevice('home_mode_off')
+      .register();
+  }
+
+  triggerHomeModeOn(device, tokens, state) {
+    this._flowTriggerHomeModeOn
+      .trigger(device, tokens, state)
+      .then(this.log)
+      .catch(this.error);
+  }
+
+  triggerHomeModeOff(device, tokens, state) {
+    this._flowTriggerHomeModeOff
+      .trigger(device, tokens, state)
+      .then(this.log)
+      .catch(this.error);
+  }
+
   async onPair(socket) {
     let api;
     let sid;

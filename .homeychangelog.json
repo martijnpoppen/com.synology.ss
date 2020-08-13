@@ -23,5 +23,9 @@
   "2.2.1": {
     "en": "Added flow actions for recording (start/stop), fixes for pairing",
     "nl": "Flow acties toegevoegd voor opname (start/stop), bugfixes bij installeren apparaten"
+  },
+  "2.3.0": {
+    "en": "Added flow triggers for Home Mode, renamed Home Mode states to enabled and disabled",
+    "nl": "Flow triggers toegevoegd voor Home Mode, Home Mode statussen hernoemd naar ingeschakeld en uitgeschakeld"
   }
 }

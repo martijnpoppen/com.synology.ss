@@ -1,6 +1,6 @@
 {
   "id": "com.synology.ss",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "compatibility": ">=4.1.0",
   "sdk": 2,
   "name": {
@@ -173,6 +173,36 @@
     }
   ],
   "flow": {
+    "triggers": [
+      {
+        "id": "home_mode_on",
+        "title": {
+          "en": "Home Mode Enabled",
+          "nl": "Home Mode Ingeschakeld"
+        },
+        "args": [
+          {
+            "name": "station",
+            "type": "device",
+            "filter": "driver_id=station"
+          }
+        ]
+      },
+      {
+        "id": "home_mode_off",
+        "title": {
+          "en": "Home Mode Disabled",
+          "nl": "Home Mode Uitgeschakeld"
+        },
+        "args": [
+          {
+            "name": "station",
+            "type": "device",
+            "filter": "driver_id=station"
+          }
+        ]
+      }
+    ],
     "actions": [
       {
         "id": "update_image",
@@ -191,8 +221,8 @@
       {
         "id": "home_mode_on",
         "title": {
-          "en": "Enter Home Mode",
-          "nl": "Home Mode Openen"
+          "en": "Home Mode Enabled",
+          "nl": "Home Mode Ingeschakeld"
         },
         "args": [
           {
@@ -205,8 +235,8 @@
       {
         "id": "home_mode_off",
         "title": {
-          "en": "Leave Home Mode",
-          "nl": "Home Mode Verlaten"
+          "en": "Home Mode Disabled",
+          "nl": "Home Mode Uitgeschakeld"
         },
         "args": [
           {
