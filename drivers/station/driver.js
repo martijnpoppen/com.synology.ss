@@ -3,6 +3,7 @@
 const Homey = require('homey');
 const fetch = require('node-fetch');
 const crypto = require('crypto');
+const { ManagerDrivers } = require('homey');
 
 module.exports = class StationDriver extends Homey.Driver {
 
@@ -12,6 +13,12 @@ module.exports = class StationDriver extends Homey.Driver {
 
     this._flowTriggerHomeModeOff = new Homey.FlowCardTriggerDevice('home_mode_off')
       .register();
+
+    // register cameras
+    const station = this;
+    ManagerDrivers.getDriver('camera').ready(() => {
+      station.registerCameras();
+    });
   }
 
   triggerHomeModeOn(device, tokens, state) {
@@ -31,6 +38,7 @@ module.exports = class StationDriver extends Homey.Driver {
   async onPair(socket) {
     let api;
     let sid;
+    let did;
 
     socket.on('station-api', (data, callback) => {
       // set data to api settings
@@ -48,12 +56,17 @@ module.exports = class StationDriver extends Homey.Driver {
       callback(null, true);
     });
 
-    socket.on('list_devices', (data, callback) => {
+    socket.on('list_devices', async (data, callback) => {
       this.log(data);
       this.log(api);
       this.log(sid);
       const deviceId = crypto.createHash('md5').update(api.toString()).digest('hex');
       this.log(deviceId);
+
+      let accountEnc = null;
+      if (api.store_credentials !== undefined && api.store_credentials === true) {
+        accountEnc = await this.getEncryptedAccount(api.account, api.passwd);
+      }
 
       const devices = [{
         name: 'Surveillance Station',
@@ -64,6 +77,8 @@ module.exports = class StationDriver extends Homey.Driver {
         },
         store: {
           sid,
+          did,
+          account: accountEnc,
           protocol: api.protocol,
           host: api.host,
           port: Number(api.port),
@@ -80,6 +95,7 @@ module.exports = class StationDriver extends Homey.Driver {
       this.log('sid');
 
       sid = data.sid;
+      did = data.did;
 
       callback(null, true);
     });
@@ -105,12 +121,35 @@ module.exports = class StationDriver extends Homey.Driver {
       callback(null, true);
     });
 
-    socket.on('sid', (data, callback) => {
-      this.log(data);
+    socket.on('sid', async (data, callback) => {
       this.log('sid');
+      this.log(data);
+      this.log(api);
 
       this.log('save host and sid to device');
-      device.setPairData(api.protocol, api.host, api.port, data.sid);
+
+      // store credentials
+      await device.setStoreValue('protocol', api.protocol).catch(this.error);
+      await device.setStoreValue('host', api.host).catch(this.error);
+      await device.setStoreValue('port', api.port).catch(this.error);
+
+      // store credentials (encrypted)
+      if (api.store_credentials !== undefined && api.store_credentials === true) {
+        this.log('store credentials');
+        // get encrypted account
+        const accountEnc = await this.getEncryptedAccount(api.account, api.passwd);
+        await device.setStoreValue('account', accountEnc).catch(this.error);
+      } else {
+        // remove old credentials
+        await device.unsetStoreValue('account').catch(this.error);
+      }
+
+      // store session
+      await device.storeSession(data.sid, data.did, false);
+
+      // set available
+      device.setAvailable()
+        .catch(this.error);
 
       callback(null, true);
     });
@@ -132,6 +171,7 @@ module.exports = class StationDriver extends Homey.Driver {
     // one time password
     if (data.otp_code !== undefined && data.otp_code.length > 0) {
       params.append('otp_code', data.otp_code);
+      params.append('enable_device_token', 'yes');
     }
 
     const url = `${data.protocol}://${data.host}:${data.port}/webapi/auth.cgi`;
@@ -159,7 +199,7 @@ module.exports = class StationDriver extends Homey.Driver {
     this.log(response);
 
     if (response !== undefined && response.data !== undefined && response.data.sid !== undefined) {
-      socket.emit('station-api-ok', response.data.sid, (err, errData) => {
+      socket.emit('station-api-ok', { sid: response.data.sid, did: response.data.did }, (err, errData) => {
         this.log(errData);
       });
     } else if (response !== undefined) {
@@ -174,6 +214,56 @@ module.exports = class StationDriver extends Homey.Driver {
         });
       }
     }
+  }
+
+  async registerCameras() {
+    this.log('register cameras');
+
+    const cameras = await ManagerDrivers.getDriver('camera').getDevices();
+    this.log('total cameras', cameras.length);
+
+    const stations = {};
+
+    await Promise.all(cameras.map(async camera => {
+      const { id } = camera.getData();
+      const stationId = camera.getStoreValue('station_id');
+      if (stationId !== undefined && stationId.length > 0) {
+        try {
+          let station = stations[`${stationId}`];
+
+          // get station device
+          if (station === undefined) {
+            station = await this.getDevice({ id: `${stationId}` });
+            if (station !== undefined && station !== null && !(station instanceof Error)) {
+              stations[`${stationId}`] = station;
+            }
+          }
+
+          // register camera with station
+          camera.ready(() => {
+            station.registerCamera(id);
+          });
+        } catch (e) {
+          this.log(e);
+        }
+      }
+    }));
+  }
+
+  async getEncryptedAccount(account, password) {
+    this.log('get encrypted account');
+    const accountData = {
+      account,
+      password,
+    };
+    const encryptedData = await Homey.app.encryptData(accountData);
+    return encryptedData;
+  }
+
+  async getDecryptedAccount(accountData) {
+    this.log('get decrypted account');
+    const decryptedData = await Homey.app.decryptData(accountData);
+    return decryptedData;
   }
 
 };

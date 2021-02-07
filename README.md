@@ -23,12 +23,10 @@ Adds support to Homey for Camera's available in Synology Surveillance Station.
 * Triggers for Home Mode (enabled / disabled)
 
 ## Getting Started
-* Install the app on Homey
-* Add a device
-* Select the Camera or Surveillance Station
-* Provide the credentials to your Synology
-* Select your device
-* Done!
+ 1. Install the app
+ 2. Add the Surveillance Station as a device
+ 3. Add the camera(s) as a device
+ 4. Done!
 
 ## Reconnect/Repair your device
 * Go to the devices settings, choose "Maintenance actions" and then "Repair".
@@ -38,9 +36,6 @@ Adds support to Homey for Camera's available in Synology Surveillance Station.
 * Surveillance Station 8.2.6-6009
 * Homey 3.2.0+
 
-## Troubleshooting
-* Problem: When your Synology reboots, the connection is lost with your device.
-* Solution: Go to the devices settings, choose "Maintenance actions" and then "Repair".
-
 ## Note
 * this app is not officially maintained by Synology.
+* You can save your credentials (encrypted) for automatic reconnecting to your Surveillance Station.

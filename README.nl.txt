@@ -21,12 +21,10 @@ Flows
  Triggers voor Home Mode (ingeschakeld / uitgeschakeld)
 
 Installatie
- Installeer de app op je Homey
- Voeg een apparaat toe via de app
- Selecteer de camera of Surveillance Station
- Vul de credentials en locatie in van je Synology
- Selecteer je apparaat
- Klaar!
+ 1. Installeer de app
+ 2. Voeg de Surveillance Station toe
+ 3. Voeg camera('s) toe
+ 4. Klaar!
 
 Opnieuw verbinding maken / Repareren
  Ga naar de instellingen van je apparaat, kies "Onderhoud" en daarna "Probeer te repareren".
@@ -36,9 +34,7 @@ Getest met
  Surveillance Station 8.2.6-6009
  Homey 3.2.0+
 
-Bekende problemen
- Probleem: Wanneer je Synology herstart dan is de connectie met je apparaat verbroken.
- Oplossing:  Ga naar de instellingen van je apparaat, kies "Onderhoud" en daarna "Probeer te repareren".
-
 Note
  Dit is geen officiele Synology app.
+ Je kan bij het toevoegen van de Surveillance Station kiezen om je gegevens op te slaan (optioneel).
+ De app zal dan automatisch connecties kunnen herstellen. Je gegevens worden versleuteld opgeslagen.

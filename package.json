@@ -1,9 +1,15 @@
 {
   "name": "com.synology.ss",
+  "license": "SEE LICENSE IN LICENSE",
   "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marcschut002/athom.com.synology.ss.git"
+  },
   "dependencies": {
     "homey-log": "^1.0.6",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
+    "node-gzip": "^1.1.2",
     "qs": "^6.9.4"
   },
   "devDependencies": {

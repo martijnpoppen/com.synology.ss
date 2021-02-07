@@ -1,17 +1,20 @@
 'use strict';
 
 const Homey = require('homey');
-const fetch = require('node-fetch');
 const DeviceBase = require('../../lib/devicebase');
 
 class SynoCameraDevice extends DeviceBase {
 
+  /**
+   * on init
+   * @returns {Promise<void>}
+   */
   async onInit() {
     this.cameraImage = null;
 
     this.log('init device');
 
-    this.setUnavailable('initializing').catch(this.error);
+    this.setUnavailable(Homey.__('exception.initializing')).catch(this.error);
 
     const data = this.getData();
     const settings = this.getSettings();
@@ -19,7 +22,7 @@ class SynoCameraDevice extends DeviceBase {
     this.log(data);
     this.log(settings);
 
-    this.migrate();
+    await this.migrate();
 
     // set image
     await this.setImage();
@@ -63,12 +66,15 @@ class SynoCameraDevice extends DeviceBase {
       });
   }
 
-  migrate() {
+  /**
+   * actions on updates to new version
+   * @returns {Promise<boolean>}
+   */
+  async migrate() {
     this.log('migrate device');
 
     const appVersion = Homey.manifest.version;
     const deviceVersion = this.getStoreValue('version');
-    const settings = this.getSettings();
 
     this.log(appVersion);
     this.log(deviceVersion);
@@ -78,59 +84,51 @@ class SynoCameraDevice extends DeviceBase {
       return true;
     }
 
-    switch (appVersion) {
-      case '1.1.0':
-        this.setClass('sensor')
-          .catch(this.error)
-          .then(this.log);
-        this.log('camera changed to sensor class');
-        break;
-      case '2.1.0':
-        if (settings.protocol !== null) {
-          const sid = this.getStoreValue('sid');
-          // copy host settings to store
-          this.storePairData(settings.protocol, settings.host, settings.port, sid);
-          this.log('host settings copied to store');
-          // remove api settings
-          settings.protocol = null;
-          settings.host = null;
-          settings.port = null;
-          settings.account = null;
-          settings.passwd = null;
-          this.log(settings);
-          this.setSettings(settings).catch(this.error);
-          this.log('api settings removed');
-        }
-        break;
-      default:
-        this.log('nothing to migrate');
+    // switch class to sensor
+    if (this.getClass() !== 'sensor') {
+      await this.setClass('sensor').catch(this.error);
+    } else {
+      this.log('camera class already on sensor');
     }
+
+    // edit settings
+    const newSettings = {
+      protocol: null,
+      host: null,
+      port: null,
+      account: null,
+      passwd: null,
+      snapshot_path: null,
+    };
+
+    await this.setSettings(newSettings).catch(this.error);
 
     // set version
     this.setStoreValue('version', appVersion).catch(this.error);
     return true;
   }
 
+  /**
+   * on added
+   */
   onAdded() {
     this.log('on added');
     this.added = true;
   }
 
+  /**
+   * delete motion detection rule when device is deleted
+   */
   onDeleted() {
     this.log('on deleted');
     // add motion detection rule
     this.deleteMotionDetectionRule().catch(this.error);
   }
 
-  async setPairData(protocol, host, port, sid) {
-    // store data
-    await this.storePairData(protocol, host, port, sid);
-    // (re)set image
-    await this.setImage();
-    // set available
-    this.setAvailable().catch(this.error);
-  }
-
+  /**
+   * set image for camera
+   * @returns {Promise<void>}
+   */
   async setImage() {
     this.log('set image');
 
@@ -159,33 +157,39 @@ class SynoCameraDevice extends DeviceBase {
     await this.setImageStream();
   }
 
+  /**
+   * set image stream
+   * @returns {Promise<void>}
+   */
   async setImageStream() {
     this.log('set stream');
 
-    const snapshotPath = this.getStoreValue('snapshot_path');
-    const urlParts = snapshotPath.split('?');
-
-    const apiUrl = this.getAPIUrl(urlParts[0], this.querystringToObject(urlParts[1]));
+    const data = this.getData();
+    const qs = {
+      api: 'SYNO.SurveillanceStation.Camera',
+      method: 'GetSnapshot',
+      version: 9,
+      id: data.id,
+    };
 
     this.cameraImage.setStream(async stream => {
-      const res = await fetch(`${apiUrl}`);
-      this.log('image response');
+      const res = await this.fetchApi('/webapi/entry.cgi', qs);
       this.log(res);
-      this.log(res.headers.raw());
-      const contentType = res.headers.get('content-type');
-      this.log(contentType);
-      this.log(contentType.indexOf('application/json'));
-      if (contentType && contentType.indexOf('application/json') !== -1) {
-        this.pairException();
-        throw new Error('failed to get image, please try again later');
-      } else if (!res.ok) {
-        this.log(res);
-        throw new Error(res.statusText);
+      try {
+        res.body.pipe(stream);
+      } catch (e) {
+        throw new Error('failed to get image');
       }
-      res.body.pipe(stream);
     });
   }
 
+  /**
+   * onSettings, enable/disable motion detection
+   * @param oldSettingsObj
+   * @param newSettingsObj
+   * @param changedKeysArr
+   * @returns {Promise<void>}
+   */
   async onSettings(oldSettingsObj, newSettingsObj, changedKeysArr) {
     this.log('onSettings');
     this.log(oldSettingsObj);
@@ -203,6 +207,10 @@ class SynoCameraDevice extends DeviceBase {
     }
   }
 
+  /**
+   * enable motion detection
+   * @returns {Promise<void>}
+   */
   async enableMotionDetection() {
     this.log('enable motion detection');
 
@@ -219,6 +227,10 @@ class SynoCameraDevice extends DeviceBase {
     this.addCapability('alarm_motion').catch(this.error);
   }
 
+  /**
+   * disable motion detection
+   * @returns {Promise<void>}
+   */
   async disableMotionDetection() {
     this.log('disable motion detection');
     const rule = await this.getMotionDetectionRule();
@@ -231,6 +243,10 @@ class SynoCameraDevice extends DeviceBase {
     this.removeCapability('alarm_motion').catch(this.error);
   }
 
+  /**
+   * get motion detection rule
+   * @returns {Promise<null|boolean>}
+   */
   async getMotionDetectionRule() {
     this.log('get motion detection rule');
     const ruleMotion = this.getStoreValue('rule_motion');
@@ -259,6 +275,10 @@ class SynoCameraDevice extends DeviceBase {
     return false;
   }
 
+  /**
+   * on motion action, triggers on motion event
+   * @returns {Promise<void>}
+   */
   async onMotion() {
     this.log('new motion request');
 
@@ -293,6 +313,10 @@ class SynoCameraDevice extends DeviceBase {
     }, 21000);
   }
 
+  /**
+   * create motion detection rule
+   * @returns {Promise<void>}
+   */
   async createMotionDetectionRule() {
     this.log('create motion detection rule');
 
@@ -316,25 +340,7 @@ class SynoCameraDevice extends DeviceBase {
       actSchedule: '"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"',
     };
 
-    const apiUrl = this.getAPIUrl('/webapi/entry.cgi', qs);
-
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    }).then(res => {
-      return res.json();
-    }).then(json => {
-      return json;
-    }).catch(error => {
-      this.error('There has been a problem with your fetch operation:', error);
-      throw new Error(error);
-    });
-
-    this.log('response');
-    this.log(response);
+    await this.fetchApi('/webapi/entry.cgi', qs);
 
     // get and save action rule id
     const ruleMotion = await this.getActionRuleMotionDetection(deviceApiMotionUrl);
@@ -343,7 +349,10 @@ class SynoCameraDevice extends DeviceBase {
     this.setStoreValue('rule_motion', ruleMotion).catch(this.error);
   }
 
-  // add action rule
+  /**
+   * delete motion detection rule
+   * @returns {Promise<void>}
+   */
   async deleteMotionDetectionRule() {
     this.log('delete motion detection rule');
 
@@ -355,53 +364,25 @@ class SynoCameraDevice extends DeviceBase {
       version: 1,
       idList: ruleMotion,
     };
-    const apiUrl = this.getAPIUrl('/webapi/entry.cgi', qs);
 
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    }).then(res => {
-      return res.json();
-    }).then(json => {
-      return json;
-    }).catch(error => {
-      this.error('There has been a problem with your fetch operation:', error);
-      throw new Error(error);
-    });
-
-    this.log('response');
-    this.log(response);
+    await this.fetchApi('/webapi/entry.cgi', qs);
   }
 
+  /**
+   * get motion detection rule
+   * @param deviceApiMotionUrl
+   * @returns {Promise<number>}
+   */
   async getActionRuleMotionDetection(deviceApiMotionUrl) {
-    this.log('create motion detection rule');
+    this.log('get motion detection rule');
 
     const qs = {
       api: 'SYNO.SurveillanceStation.ActionRule',
       method: 'List',
       version: 3,
     };
-    const apiUrl = this.getAPIUrl('/webapi/entry.cgi', qs);
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    }).then(res => {
-      return res.json();
-    }).then(json => {
-      return json;
-    }).catch(error => {
-      this.error('There has been a problem with your fetch operation:', error);
-      throw new Error(error);
-    });
 
-    this.log('response');
-    this.log(response);
+    const response = await this.fetchApi('/webapi/entry.cgi', qs);
 
     if (response.data === undefined) {
       throw new Error('no rules found');
@@ -438,14 +419,27 @@ class SynoCameraDevice extends DeviceBase {
     throw new Error('no rule found');
   }
 
+  /**
+   * start recording
+   * @returns {Promise<void>}
+   */
   async externalRecordStart() {
     this.externalRecord('start');
   }
 
+  /**
+   * stop recording
+   * @returns {Promise<void>}
+   */
   async externalRecordStop() {
     this.externalRecord('stop');
   }
 
+  /**
+   * recording call
+   * @param value
+   * @returns {Promise<void>}
+   */
   async externalRecord(value) {
     this.log(`externalRecord ${value}`);
 
@@ -457,27 +451,51 @@ class SynoCameraDevice extends DeviceBase {
       version: 1,
       action: value,
     };
-    const apiUrl = this.getAPIUrl('/webapi/entry.cgi', qs);
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    }).then(res => {
-      return res.json();
-    }).then(json => {
-      return json;
-    }).catch(error => {
-      this.error('There has been a problem with your fetch operation:', error);
-      throw new Error(error);
-    });
 
-    this.log('response');
-    this.log(response);
+    await this.fetchApi('/webapi/entry.cgi', qs);
+  }
 
-    if (response.success === undefined || response.success === false) {
-      throw new Error('response from synology is not ok');
+  /**
+   * set camera as available and update image link when new session is available
+   * @returns {Promise<void>}
+   */
+  async onNewSid() {
+    this.log('camera on new sid');
+    await this.setImage();
+    this.setAvailable().catch(this.error);
+  }
+
+  /**
+   * set this device as unavailable when session fails
+   * @returns {Promise<void>}
+   */
+  async onSidFail() {
+    this.log('camera sid fail');
+    this.setUnavailable(Homey.__('exception.authentication_failed')).catch(this.error);
+  }
+
+  /**
+   * validate (re)pair connection with Surveillance Station
+   * @returns boolean
+   */
+  async validatePair() {
+    this.log('validate pair');
+
+    const data = this.getData();
+    const qs = {
+      api: 'SYNO.SurveillanceStation.Camera',
+      method: 'GetInfo',
+      cameraIds: data.id,
+      version: 8,
+    };
+
+    try {
+      const response = await this.fetchApi('/webapi/entry.cgi', qs);
+      return response !== undefined && response.success === true
+        && response.data.cameras.length > 0;
+    } catch (e) {
+      this.log(e);
+      return false;
     }
   }
 

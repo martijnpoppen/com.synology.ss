@@ -1,20 +1,29 @@
 'use strict';
 
 const Homey = require('homey');
-const fetch = require('node-fetch');
+const { ManagerDrivers } = require('homey');
+const { ManagerNotifications } = require('homey');
 const DeviceBase = require('../../lib/devicebase');
 
 class StationDevice extends DeviceBase {
 
   async onInit() {
     this.log('init device');
-    this.setUnavailable('initializing').catch(this.error);
+    this.setUnavailable(Homey.__('exception.initializing'))
+      .catch(this.error);
 
     const data = this.getData();
     const settings = this.getSettings();
 
     this.log(data);
     this.log(settings);
+
+    // clear camera's
+    await this.unsetStoreValue('cameras').catch(this.error);
+
+    this.ready(() => {
+      Homey.app.log('station is ready', data.id);
+    });
 
     await this.migrate();
 
@@ -45,10 +54,10 @@ class StationDevice extends DeviceBase {
     // get/set current state
     this.setCurrentState()
       .then(() => {
-        this.setAvailable().catch(this.error);
+        this.setAvailable()
+          .catch(this.error);
       })
       .catch(err => {
-        this.pairException();
         this.log(err);
       });
   }
@@ -83,19 +92,11 @@ class StationDevice extends DeviceBase {
     this.deleteHomeModeRules();
   }
 
-  async setPairData(protocol, host, port, sid) {
-    // store data
-    await this.storePairData(protocol, host, port, sid);
-    // set available
-    this.setAvailable().catch(this.error);
-  }
-
   async migrate() {
     this.log('migrate device');
 
     const appVersion = Homey.manifest.version;
     const deviceVersion = this.getStoreValue('version');
-    const settings = this.getSettings();
 
     this.log(appVersion);
     this.log(deviceVersion);
@@ -105,30 +106,21 @@ class StationDevice extends DeviceBase {
       return true;
     }
 
-    switch (appVersion) {
-      case '2.1.0':
-        if (settings.protocol !== null) {
-          const sid = this.getStoreValue('sid');
-          // copy host settings to store
-          await this.storePairData(settings.protocol, settings.host, settings.port, sid);
-          this.log('host settings copied to store');
-          // remove api settings
-          settings.protocol = null;
-          settings.host = null;
-          settings.port = null;
-          settings.account = null;
-          settings.passwd = null;
-          this.log(settings);
-          this.setSettings(settings).catch(this.error);
-          this.log('api settings removed');
-        }
-        break;
-      default:
-        this.log('nothing to migrate');
-    }
+    // edit settings
+    const newSettings = {
+      protocol: null,
+      host: null,
+      port: null,
+      account: null,
+      passwd: null,
+      snapshot_path: null,
+    };
+
+    await this.setSettings(newSettings).catch(this.error);
 
     // set version
-    this.setStoreValue('version', appVersion).catch(this.error);
+    this.setStoreValue('version', appVersion)
+      .catch(this.error);
     return true;
   }
 
@@ -146,12 +138,13 @@ class StationDevice extends DeviceBase {
     const rules = await this.getActionRules();
     let homeModeRule = null;
 
-    Object.keys(rules).forEach(key => {
-      const rule = rules[key];
-      if (rule.ruleId === ruleHomeMode) {
-        homeModeRule = rule;
-      }
-    });
+    Object.keys(rules)
+      .forEach(key => {
+        const rule = rules[key];
+        if (rule.ruleId === ruleHomeMode) {
+          homeModeRule = rule;
+        }
+      });
 
     if (homeModeRule !== null) {
       return homeModeRule;
@@ -183,24 +176,7 @@ class StationDevice extends DeviceBase {
       actSchedule: '"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"',
     };
 
-    const apiUrl = this.getAPIUrl('/webapi/entry.cgi', qs);
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    }).then(res => {
-      return res.json();
-    }).then(json => {
-      return json;
-    }).catch(error => {
-      this.error('There has been a problem with your fetch operation:', error);
-      throw new Error(error);
-    });
-
-    this.log('response');
-    this.log(response);
+    await this.fetchApi('/webapi/entry.cgi', qs);
 
     const ruleHomeMode = await this.getActionRuleHomeMode(deviceApiHomeModeUrl);
 
@@ -214,28 +190,31 @@ class StationDevice extends DeviceBase {
     const actRule = await this.getActionRules();
 
     let ruleMatch = 0;
-    Object.keys(actRule).forEach(i => {
-      const rule = actRule[i];
+    Object.keys(actRule)
+      .forEach(i => {
+        const rule = actRule[i];
 
-      Object.keys(rule.events).forEach(e => {
-        const event = rule.events[e];
+        Object.keys(rule.events)
+          .forEach(e => {
+            const event = rule.events[e];
 
-        this.log(event.evtDevName);
-        this.log(event.evtDevId);
-        this.log(event.evtId);
+            this.log(event.evtDevName);
+            this.log(event.evtDevId);
+            this.log(event.evtId);
+          });
+
+        Object.keys(rule.actions)
+          .forEach(a => {
+            const action = rule.actions[a];
+
+            if (action.extUrl === extUrl) {
+              // rule found!
+              this.log(`home mode rule found: ${rule.ruleId}`);
+              ruleMatch = rule.ruleId;
+            }
+            return ruleMatch;
+          });
       });
-
-      Object.keys(rule.actions).forEach(a => {
-        const action = rule.actions[a];
-
-        if (action.extUrl === extUrl) {
-          // rule found!
-          this.log(`home mode rule found: ${rule.ruleId}`);
-          ruleMatch = rule.ruleId;
-        }
-        return ruleMatch;
-      });
-    });
 
     if (ruleMatch > 0) {
       this.log(`rule ${ruleMatch} found`);
@@ -275,24 +254,8 @@ class StationDevice extends DeviceBase {
       version: 1,
       idList,
     };
-    const apiUrl = this.getAPIUrl('/webapi/entry.cgi', qs);
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    }).then(res => {
-      return res.json();
-    }).then(json => {
-      return json;
-    }).catch(error => {
-      this.error('There has been a problem with your fetch operation:', error);
-      throw new Error(error);
-    });
 
-    this.log('response');
-    this.log(response);
+    await this.fetchApi('/webapi/entry.cgi', qs);
   }
 
   async setCurrentState() {
@@ -303,31 +266,11 @@ class StationDevice extends DeviceBase {
       method: 'GetInfo',
       version: 1,
     };
-    const apiUrl = this.getAPIUrl('/webapi/entry.cgi', qs);
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    }).then(res => {
-      return res.json();
-    }).then(json => {
-      return json;
-    }).catch(error => {
-      this.error('There has been a problem with your fetch operation:', error);
-      throw new Error(error);
-    });
 
-    this.log('response');
-    this.log(response);
+    const response = await this.fetchApi('/webapi/entry.cgi', qs);
 
-    if (response.success === undefined || response.success === false) {
-      throw new Error('response from synology is not ok');
-    }
-
-    if (response.data === undefined || response.data.on === undefined
-    || typeof response.data.on !== 'boolean') {
+    if (response === undefined || response.data === undefined || response.data.on === undefined
+      || typeof response.data.on !== 'boolean') {
       throw new Error('no current state found or wrong data returned from Synology');
     }
 
@@ -347,28 +290,8 @@ class StationDevice extends DeviceBase {
       version: 1,
       on: value,
     };
-    const apiUrl = this.getAPIUrl('/webapi/entry.cgi', qs);
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    }).then(res => {
-      return res.json();
-    }).then(json => {
-      return json;
-    }).catch(error => {
-      this.error('There has been a problem with your fetch operation:', error);
-      throw new Error(error);
-    });
-
-    this.log('response');
-    this.log(response);
-
-    if (response.success === undefined || response.success === false) {
-      throw new Error('response from synology is not ok');
-    }
+    const response = await this.fetchApi('/webapi/entry.cgi', qs);
+    return response;
   }
 
   async onHomeModeStatusChange(value) {
@@ -395,6 +318,96 @@ class StationDevice extends DeviceBase {
     } else if (value === true) {
       this._driver.triggerHomeModeOn(device, tokens, state);
     }
+  }
+
+  async testApi() {
+    this.log('test api');
+    const qs = {
+      api: 'SYNO.SurveillanceStation.HomeMode',
+      method: 'Switch',
+      version: 1,
+      on: false,
+    };
+    try {
+      this.log('test try');
+      const response = await this.fetchApi('/webapi/entry.cgi', qs);
+      this.log('response X');
+      this.log(response);
+    } catch (e) {
+      this.log('test catch');
+      this.pairException();
+    }
+    this.log('test end');
+  }
+
+  async registerCamera(id) {
+    this.log('register camera', id);
+    let cameras = this.getStoreValue('cameras');
+    this.log(cameras);
+
+    if (cameras === null || cameras === undefined) {
+      this.log('new array with cameras');
+      cameras = [];
+    }
+
+    if (cameras.indexOf(id) === -1) {
+      cameras.push(id);
+    }
+
+    await this.setStoreValue('cameras', cameras)
+      .catch(this.error);
+  }
+
+  async onNewSid() {
+    this.log('station on new sid');
+
+    this.setAvailable();
+
+    const cameras = await this.getStoreValue('cameras');
+    if (cameras === null || cameras === undefined || cameras.length === 0) {
+      this.log('no cameras for this station');
+      return;
+    }
+
+    this.log(cameras);
+
+    await Promise.all(cameras.map(async cameraId => {
+      this.log(cameraId);
+      const camera = await ManagerDrivers.getDriver('camera').getDevice({ id: Number(cameraId) });
+      this.log(camera);
+      if (camera !== undefined && camera !== null && !(camera instanceof Error)) {
+        await camera.onNewSid();
+      }
+    }));
+  }
+
+  /**
+   * When Session ID fails, trigger failed method for all camera's
+   * @returns {Promise<void>}
+   */
+  async onSidFail() {
+    this.log('station sid failed');
+
+    this.setUnavailable(Homey.__('exception.authentication_failed'));
+
+    ManagerNotifications.registerNotification({ excerpt: Homey.__('exception.authentication_failed') }, (e, n) => {});
+
+    const cameras = await this.getStoreValue('cameras');
+    if (cameras === null || cameras === undefined || cameras.length === 0) {
+      this.log('no cameras for this station');
+      return;
+    }
+
+    this.log(cameras);
+
+    await Promise.all(cameras.map(async cameraId => {
+      this.log(cameraId);
+      const camera = await ManagerDrivers.getDriver('camera').getDevice({ id: Number(cameraId) });
+      this.log(camera);
+      if (camera !== undefined && camera !== null && !(camera instanceof Error)) {
+        await camera.onSidFail();
+      }
+    }));
   }
 
 }

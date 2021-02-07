@@ -1,7 +1,7 @@
 {
   "camera": {
     "front": {
-      "title": "Camera"
+      "title": "Snapshot"
     }
   },
   "pair": {
@@ -16,6 +16,7 @@
         "label_account": "Account",
         "label_passwd": "Wachtwoord",
         "label_otp_code": "2-Staps Verificatie",
+        "label_store_credentials": "Onthoud mijn gegevens",
         "placeholder_otp_code": "Vul de 6-cijferige code in"
     },
     "motion": {
@@ -23,12 +24,38 @@
       "description": "Wil je beweginsmeldingen activeren? Hierdoor zal er een Actieregel worden aangemaakt in je Synology Surveillance Station.",
       "footnote": "Je hebt minimaal schrijfrechten nodig voor de Surveillance Station om deze actie uit te kunnen voeren."
     },
-    "lost": "Connectie is verlopen. Probeer te repareren."
+    "lost": "Connectie is verlopen. Probeer te repareren.",
+    "station": {
+      "title": "Surveillance Station"
+    },
+    "nostation": {
+      "title": "Geen Surveillance Station gevonden",
+      "submit": "Afsluiten",
+      "description": "Er is geen Surveillance Station gevonden. Voeg eerst de Surveillance Station toe als apparaat aan Homey voordat je een camera toe kan voegen."
+    },
+    "camera": {
+      "title": "Verbind je camera met je Synology Surveillance Station",
+      "description": "Om je camera toe te kunnen voegen moet je eerst je Synology Surveillance Station toevoegen aan de Homey. Selecteer hieronder je Surveillance Station waar je camera's aan gekoppeld zijn.",
+      "done": "Gelukt! Je apparaat is weer verbonden.",
+      "station_submit": "Opslaan",
+      "station": "Surveillance Station"
+    }
   },
   "repair": {
     "api": {
       "title": "Verbind opnieuw met je Synology Surveillance Station",
       "done": "Gelukt! Je apparaat is weer verbonden."
+    },
+    "camera": {
+      "title": "Verbind je camera met je Synology Surveillance Station",
+      "description": "Om je camera toe te kunnen voegen moet je eerst je Synology Surveillance Station toevoegen aan de Homey. Selecteer hieronder je Surveillance Station waar je camera aan gekoppeld is.",
+      "done": "Gelukt! Je apparaat is weer verbonden.",
+      "station_submit": "Opslaan",
+      "station": "Surveillance Station"
     }
+  },
+  "exception": {
+    "authentication_failed": "Fout bij het aanmelden, probeer de Surveillance Station te repareren.",
+    "initializing": "Bezig met installeren"
   }
 }

@@ -24,8 +24,7 @@ module.exports = [
 
         if (device !== undefined && device !== null && !(device instanceof Error)) {
           device.onMotion().catch(Homey.app.error);
-        }
-        else {
+        } else {
           Homey.app.log('device is not a camera');
         }
       } catch (e) {

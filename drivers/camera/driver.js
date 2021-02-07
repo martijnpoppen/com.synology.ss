@@ -1,29 +1,40 @@
 'use strict';
 
 const Homey = require('homey');
-const querystring = require('querystring');
 const fetch = require('node-fetch');
+const { ManagerDrivers } = require('homey');
 
 module.exports = class CameraDriver extends Homey.Driver {
 
   async onPair(socket) {
     let api;
     let motionDetection = false;
-    let sid;
+    let stationId;
 
-    socket.on('api', (data, callback) => {
-      // set data to api settings
-      api = data;
+    socket.on('station', (data, callback) => {
+      this.log('on station');
+      const stations = [];
 
-      this.validateAPI(socket, data, this);
-      callback(null, true);
+      const devices = ManagerDrivers.getDriver('station').getDevices();
+      this.log(devices);
+
+      Object.keys(devices).forEach(i => {
+        const device = devices[i];
+        const station = {
+          id: device.getData().id,
+          name: device.getName(),
+        };
+        stations.push(station);
+      });
+
+      this.log(stations);
+      callback(null, stations);
     });
 
-    socket.on('api-2fa', (data, callback) => {
+    socket.on('station_save', (data, callback) => {
       // set data to api settings
-      api.otp_code = data.otp_code;
+      stationId = data.station;
 
-      this.validateAPI(socket, api, this);
       callback(null, true);
     });
 
@@ -33,20 +44,23 @@ module.exports = class CameraDriver extends Homey.Driver {
       callback(null, true);
     });
 
-    socket.on('list_devices', (data, callback) => {
+    socket.on('list_devices', async (data, callback) => {
       this.log(data);
       this.log(api);
-      this.log(sid);
+      this.log(stationId);
 
-      const urlq = {
+      const stationDevice = ManagerDrivers.getDriver('station').getDevice({ id: `${stationId}` });
+      this.log(stationDevice);
+
+      const qs = {
         api: 'SYNO.SurveillanceStation.Camera',
         method: 'List',
         version: 3,
-        _sid: sid,
       };
-      const url = `${api.protocol}://${api.host}:${api.port}/webapi/entry.cgi?${querystring.stringify(urlq)}`;
-      this.log(url);
-      const response = fetch(url, {
+      const apiUrl = await stationDevice.getAPIUrl('/webapi/entry.cgi', qs);
+
+      this.log(apiUrl);
+      const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -73,11 +87,7 @@ module.exports = class CameraDriver extends Homey.Driver {
               motion_detection: motionDetection,
             },
             store: {
-              snapshot_path: cam.snapshot_path,
-              sid,
-              protocol: api.protocol,
-              host: api.host,
-              port: Number(api.port),
+              station_id: stationId,
               version: Homey.manifest.version,
             },
           };
@@ -92,106 +102,48 @@ module.exports = class CameraDriver extends Homey.Driver {
       });
       this.log(response);
     });
-
-    socket.on('sid', (data, callback) => {
-      this.log(data);
-      this.log('sid');
-
-      sid = data.sid;
-
-      callback(null, true);
-    });
   }
 
   onRepair(socket, device) {
     this.log('on repair');
-    let api;
 
-    socket.on('api', (data, callback) => {
-      // set data to api settings
-      api = data;
+    socket.on('station', (data, callback) => {
+      this.log('on station');
+      const stations = [];
 
-      this.validateAPI(socket, data, this);
-      callback(null, true);
-    });
+      const devices = ManagerDrivers.getDriver('station').getDevices();
+      this.log(devices);
 
-    socket.on('api-2fa', (data, callback) => {
-      // set data to api settings
-      api.otp_code = data.otp_code;
-
-      this.validateAPI(socket, api, this);
-      callback(null, true);
-    });
-
-    socket.on('sid', (data, callback) => {
-      this.log(data);
-      this.log('sid');
-
-      this.log('save host and sid to device');
-      device.setPairData(api.protocol, api.host, api.port, data.sid);
-
-      callback(null, true);
-    });
-  }
-
-  async validateAPI(socket, data) {
-    this.log('validateAPI');
-    this.log(data);
-
-    const params = new URLSearchParams();
-    params.append('api', 'SYNO.API.Auth');
-    params.append('method', 'Login');
-    params.append('version', 6);
-    params.append('session', 'SurveillanceStation');
-    params.append('account', data.account);
-    params.append('passwd', data.passwd);
-    params.append('format', 'sid');
-
-    // one time password
-    if (data.otp_code !== undefined && data.otp_code.length > 0) {
-      params.append('otp_code', data.otp_code);
-    }
-
-    const url = `${data.protocol}://${data.host}:${data.port}/webapi/auth.cgi`;
-
-    this.log(url);
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-      },
-      body: params,
-    }).then(res => {
-      return res.json();
-    }).then(json => {
-      return json;
-    }).catch(error => {
-      this.log(error);
-      // result not ok
-      socket.emit('api-error', error.message, (err, errData) => {
-        this.log(errData);
+      Object.keys(devices).forEach(i => {
+        const driverDevice = devices[i];
+        const station = {
+          id: driverDevice.getData().id,
+          name: driverDevice.getName(),
+        };
+        stations.push(station);
       });
+
+      this.log(stations);
+      callback(null, stations);
     });
 
-    this.log('response');
-    this.log(response);
+    socket.on('station_save', (data, callback) => {
+      // set data to api settings
+      device.setStoreValue('station_id', `${data.station}`)
+        .then(async () => {
+          // validate connection
+          const success = await device.validatePair();
 
-    if (response !== undefined && response.data !== undefined && response.data.sid !== undefined) {
-      socket.emit('api-ok', response.data.sid, (err, errData) => {
-        this.log(errData);
-      });
-    } else if (response !== undefined) {
-      // result not ok
-      if (response.error.code === 403) {
-        socket.emit('api-2fa', '', (err, errData) => {
-          this.log(errData);
-        });
-      } else {
-        socket.emit('api-error', 'API login failed', (err, errData) => {
-          this.log(errData);
-        });
-      }
-    }
+          if (success === true) {
+            device.setAvailable();
+          } else {
+            device.setUnavailable('authentication failed');
+          }
+
+          callback(null, success);
+        })
+        .catch(this.error);
+    });
   }
 
 };

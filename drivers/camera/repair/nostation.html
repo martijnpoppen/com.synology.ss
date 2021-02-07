@@ -1,0 +1,29 @@
+<link href="../assets/css/styles.css" rel="stylesheet" type="text/css"/>
+<script>
+    Homey.setTitle( Homey.__('pair.nostation.title') );
+
+    const nostation_submit = document.getElementById('nostation_submit');
+    nostation_submit.value = Homey.__("pair.nostation.submit");
+
+    const nostation_form = document.getElementById('nostation-form');
+    nostation_form.onsubmit = submit;
+
+    function submit(event) {
+
+      // For this example, don't actually submit the form
+      event.preventDefault();
+
+      // Close the pair session
+      Homey.showView('done');
+    }
+
+</script>
+<div class="hy-tmpl-api-logo">
+    <img class="my-svg" src="../assets/svg/api.svg" alt="api">
+</div>
+<p data-i18n="pair.nostation.description" ></p>
+<form id="nostation-form" class="hy-tmpl-api-form" action="/" method="post">
+    <div class="hy-tmpl-api-row row">
+        <input class="hy-button hy-button-primary hy-button-fill hy-tmpl-api-submit button" id="nostation_submit" type="submit" data-i18n="pair.nostation.submit">
+    </div>
+</form>

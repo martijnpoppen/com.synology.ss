@@ -16,6 +16,7 @@
         "label_account": "Account",
         "label_passwd": "Password",
         "label_otp_code": "2-Step Verification",
+        "label_store_credentials": "Remember my credentials",
         "placeholder_otp_code": "Enter 6-digit code"
     },
     "motion": {
@@ -26,12 +27,35 @@
     "lost": "Connection is expired. Please repair.",
     "station": {
       "title": "Surveillance Station"
+    },
+    "nostation": {
+      "title": "No Surveillance Station found",
+      "submit": "Close",
+      "description": "No Surveillance Station found. Please add your Surveillance Station to your Homey first."
+    },
+    "camera": {
+      "title": "Connect your camera to your Surveillance Station",
+      "description": "You need to add your Synology Surveillance Station first to be able to add your camera's. Please select your Surveillance Station below to add your camera's.",
+      "done": "Great! Your device is connected again.",
+      "station_submit": "Save",
+      "station": "Your Surveillance Station"
     }
   },
   "repair": {
     "api": {
       "title": "Reconnect your Synology Surveillance Station",
       "done": "Great! Your device is connected again."
+    },
+    "camera": {
+      "title": "Connect your camera to your Surveillance Station",
+      "description": "You need to add your Synology Surveillance Station first to be able to add your camera's. Please select your Surveillance Station below.",
+      "done": "Great! Your device is connected again.",
+      "station_submit": "Save",
+      "station": "Your Surveillance Station"
     }
+  },
+  "exception": {
+    "authentication_failed": "Authentication failed, please repair your Surveillance Station",
+    "initializing": "Initializing"
   }
 }

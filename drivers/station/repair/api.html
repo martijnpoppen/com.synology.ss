@@ -16,6 +16,7 @@
             'port': document.getElementById("port").value,
             'account': document.getElementById("account").value,
             'passwd': document.getElementById("passwd").value,
+            'store_credentials': document.getElementById("store_credentials").checked,
         };
 
         Homey.emit( 'station-api', data, function( err, result ){
@@ -35,8 +36,8 @@
         event.preventDefault();
     }
 
-    Homey.on('station-api-ok', function( message, callback ){
-      Homey.emit('sid', { sid: message }, function(err, result){
+    Homey.on('station-api-ok', function( data, callback ){
+      Homey.emit('sid', { sid: data.sid, did: data.did }, function(err, result){
         if(result===true) {
           Homey.confirm( Homey.__('repair.api.done'), 'info', function(){
             Homey.showView('done');
@@ -82,6 +83,10 @@
     <div class="hy-tmpl-api-row row">
         <label class="hy-label hy-tmpl-api-label" for="passwd" data-i18n="pair.api.label_passwd"></label>
         <input class="hy-input-text" name="passwd" type="password" id="passwd" value="" placeholder="Wachtwoord" required>
+    </div>
+    <div class="hy-tmpl-api-row row">
+        <input class="hy-input-checkbox" name="store_credentials" type="checkbox" id="store_credentials" value="true" checked>
+        <label class="hy-label hy-tmpl-api-label" for="store_credentials" data-i18n="pair.api.label_store_credentials"></label>
     </div>
     <div class="hy-tmpl-api-row row">
         <input class="hy-button hy-button-primary hy-button-fill hy-tmpl-api-submit button" type="submit" data-i18n="pair.api.submit">

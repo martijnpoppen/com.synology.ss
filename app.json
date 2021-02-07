@@ -1,6 +1,6 @@
 {
   "id": "com.synology.ss",
-  "version": "2.3.0",
+  "version": "3.0.0",
   "compatibility": ">=4.1.0",
   "sdk": 2,
   "name": {
@@ -87,17 +87,47 @@
               "value": false
             }
           ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Account"
+          },
+          "children": [
+            {
+              "id": "account",
+              "type": "text",
+              "label": {
+                "en": "Username",
+                "nl": "Gebruikersnaam"
+              },
+              "value": ""
+            },
+            {
+              "id": "password",
+              "type": "password",
+              "label": {
+                "en": "Password",
+                "nl": "Wachtwoord"
+              },
+              "value": ""
+            }
+          ]
         }
       ],
       "pair": [
         {
-          "id": "api"
+          "id": "station"
         },
         {
-          "id": "2fa"
+          "id": "nostation"
         },
         {
           "id": "motion"
+        },
+        {
+          "id": "done",
+          "template": "done"
         },
         {
           "id": "list_devices",
@@ -116,10 +146,10 @@
       ],
       "repair": [
         {
-          "id": "api"
+          "id": "station"
         },
         {
-          "id": "2fa"
+          "id": "nostation"
         },
         {
           "id": "done",

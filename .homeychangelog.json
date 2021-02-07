@@ -27,5 +27,9 @@
   "2.3.0": {
     "en": "Added flow triggers for Home Mode, renamed Home Mode states to enabled and disabled",
     "nl": "Flow triggers toegevoegd voor Home Mode, Home Mode statussen hernoemd naar ingeschakeld en uitgeschakeld"
+  },
+  "3.0.0": {
+    "en": "Credentials moved to Surveillance Station with option to save credentials for auto reconnect",
+    "nl": "Inloggen verplaatst naar Surveillance Station met optie om deze op te slaan"
   }
 }
