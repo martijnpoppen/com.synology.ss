@@ -31,5 +31,9 @@
   "3.0.0": {
     "en": "Credentials moved to Surveillance Station with option to save credentials for auto reconnect",
     "nl": "Inloggen verplaatst naar Surveillance Station met optie om deze op te slaan"
+  },
+  "3.0.1": {
+    "en": "Credentials moved to Surveillance Station with option to save credentials for auto reconnect",
+    "nl": "Inloggen verplaatst naar Surveillance Station met optie om deze op te slaan"
   }
 }

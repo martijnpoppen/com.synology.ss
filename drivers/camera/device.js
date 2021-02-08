@@ -198,7 +198,10 @@ class SynoCameraDevice extends DeviceBase {
 
     if (changedKeysArr.includes('motion_detection')
             && newSettingsObj.motion_detection === true) {
-      await this.enableMotionDetection();
+      const success = await this.enableMotionDetection();
+      if (success !== true) {
+        throw new Error(Homey.__('exception.rule_update_failed'));
+      }
     }
 
     if (changedKeysArr.includes('motion_detection')
@@ -216,15 +219,21 @@ class SynoCameraDevice extends DeviceBase {
 
     const rule = await this.getMotionDetectionRule();
 
+    let success;
+
     if (rule !== false) {
       // enable rule
-      await this.enableActionRule(rule);
+      success = await this.enableActionRule(rule);
     } else {
       // add action rule
-      await this.createMotionDetectionRule();
+      success = await this.createMotionDetectionRule();
     }
 
-    this.addCapability('alarm_motion').catch(this.error);
+    if (success === true) {
+      this.addCapability('alarm_motion').catch(this.error);
+    }
+
+    return success;
   }
 
   /**
@@ -233,14 +242,21 @@ class SynoCameraDevice extends DeviceBase {
    */
   async disableMotionDetection() {
     this.log('disable motion detection');
+
     const rule = await this.getMotionDetectionRule();
+    let success;
 
     if (rule !== false) {
       // disable rule
-      await this.disableActionRule(rule);
+      success = await this.disableActionRule(rule);
     }
 
-    this.removeCapability('alarm_motion').catch(this.error);
+    if (success === true) {
+      this.removeCapability('alarm_motion')
+        .catch(this.error);
+    }
+
+    return success;
   }
 
   /**
@@ -345,8 +361,12 @@ class SynoCameraDevice extends DeviceBase {
     // get and save action rule id
     const ruleMotion = await this.getActionRuleMotionDetection(deviceApiMotionUrl);
 
-    // save rule id
-    this.setStoreValue('rule_motion', ruleMotion).catch(this.error);
+    if (ruleMotion !== undefined && Number.isInteger(ruleMotion)) {
+      this.setStoreValue('rule_motion', ruleMotion).catch(this.error);
+      return true;
+    }
+
+    return false;
   }
 
   /**

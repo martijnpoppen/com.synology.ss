@@ -56,6 +56,7 @@
   },
   "exception": {
     "authentication_failed": "Authentication failed, please repair your Surveillance Station",
-    "initializing": "Initializing"
+    "initializing": "Initializing",
+    "rule_update_failed": "Could not update or create rule, please make sure the user is a member of the administrator group in your Surveillance Station."
   }
 }

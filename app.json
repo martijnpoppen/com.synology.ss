@@ -1,6 +1,6 @@
 {
   "id": "com.synology.ss",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "compatibility": ">=4.1.0",
   "sdk": 2,
   "name": {
@@ -45,8 +45,6 @@
       },
       "getable": true,
       "setable": true,
-      "uiComponent": "toggle",
-      "uiQuickAction": false,
       "insights": true,
       "insightsTitleTrue": {
         "en": "Enter Home Mode",
@@ -84,33 +82,11 @@
                 "en": "Active",
                 "nl": "Actief"
               },
+              "hint": {
+                "en": "The user needs to be a member of the administrator group for this setting to work properly.",
+                "nl": "De gebruiker moet lid zijn van de administrator groep om deze optie te kunnen activeren."
+              },
               "value": false
-            }
-          ]
-        },
-        {
-          "type": "group",
-          "label": {
-            "en": "Account"
-          },
-          "children": [
-            {
-              "id": "account",
-              "type": "text",
-              "label": {
-                "en": "Username",
-                "nl": "Gebruikersnaam"
-              },
-              "value": ""
-            },
-            {
-              "id": "password",
-              "type": "password",
-              "label": {
-                "en": "Password",
-                "nl": "Wachtwoord"
-              },
-              "value": ""
             }
           ]
         }
