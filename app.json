@@ -87,6 +87,23 @@
                 "nl": "De gebruiker moet lid zijn van de administrator groep om deze optie te kunnen activeren."
               },
               "value": false
+            },
+            {
+              "id": "motion_timeout",
+              "type": "number",
+              "label": {
+                "en": "Timeout",
+                "nl": "Time-out"
+              },
+              "units" : {
+                "en": "Seconds",
+                "nl": "Seconde"
+              },
+              "hint": {
+                "en": "Timeout should be at least 10 seconds. To little could mean the camera could trigger to much motion events.",
+                "nl": "Time-out moet minimaal 10 seconde zijn. Een te lage instelling kan er voor zorgen dat de camera te veel beweging detecteert."
+              },
+              "value": 21
             }
           ]
         }

@@ -58,5 +58,7 @@
     "authentication_failed": "Authentication failed, please repair your Surveillance Station",
     "initializing": "Initializing",
     "rule_update_failed": "Could not update or create rule, please make sure the user is a member of the administrator group in your Surveillance Station."
+    "initializing": "Initializing",
+    "motion_timeout_tolow": "Timeout setting should be at least 10 seconds"
   }
 }

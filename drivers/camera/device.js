@@ -196,6 +196,11 @@ class SynoCameraDevice extends DeviceBase {
     this.log(newSettingsObj);
     this.log(changedKeysArr);
 
+    if(changedKeysArr.includes('motion_timeout')
+    && newSettingsObj.motion_timeout < 10) {
+      throw new Error(Homey.__('exception.motion_timeout_tolow'));
+    }
+
     if (changedKeysArr.includes('motion_detection')
             && newSettingsObj.motion_detection === true) {
       const success = await this.enableMotionDetection();
@@ -321,12 +326,14 @@ class SynoCameraDevice extends DeviceBase {
     }
 
     const that = this;
-    this.log('start new timer for 15s');
+    let motionTimeout=this.getMotionTimeoutSetting();
+
+    this.log('start new timer for '+motionTimeout+' sec');
     this.motion_timer = setTimeout(() => {
       that.setCapabilityValue('alarm_motion', false);
       that.motion_timer = null;
       this.log('device motion ended');
-    }, 21000);
+    }, (motionTimeout*1000));
   }
 
   /**
@@ -517,6 +524,14 @@ class SynoCameraDevice extends DeviceBase {
       this.log(e);
       return false;
     }
+  }
+
+  getMotionTimeoutSetting() {
+    let motionTimeout = this.getSetting('motion_timeout');
+    if(motionTimeout!==undefined && Number.isInteger(motionTimeout) && motionTimeout >= 10) {
+      return motionTimeout;
+    } else
+      return 21;
   }
 
 }
