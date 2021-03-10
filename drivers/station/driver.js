@@ -3,7 +3,7 @@
 const Homey = require('homey');
 const fetch = require('node-fetch');
 const crypto = require('crypto');
-const { ManagerDrivers } = require('homey');
+const AbortController = require('abort-controller');
 
 module.exports = class StationDriver extends Homey.Driver {
 
@@ -13,12 +13,6 @@ module.exports = class StationDriver extends Homey.Driver {
 
     this._flowTriggerHomeModeOff = new Homey.FlowCardTriggerDevice('home_mode_off')
       .register();
-
-    // register cameras
-    const station = this;
-    ManagerDrivers.getDriver('camera').ready(() => {
-      station.registerCameras();
-    });
   }
 
   triggerHomeModeOn(device, tokens, state) {
@@ -177,77 +171,67 @@ module.exports = class StationDriver extends Homey.Driver {
     const url = `${data.protocol}://${data.host}:${data.port}/webapi/auth.cgi`;
 
     this.log(url);
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-      },
-      body: params,
-    }).then(res => {
-      return res.json();
-    }).then(json => {
-      return json;
-    }).catch(error => {
-      this.log(error);
-      // result not ok
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => {
+      controller.abort();
+    }, 25000);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+        },
+        body: params,
+        signal: controller.signal,
+      }).then(res => {
+        return res.json();
+      }).then(json => {
+        return json;
+      }).catch(error => {
+        this.log(error);
+
+        let message = '';
+        if (error.type !== undefined && error.type === 'aborted') {
+          message = Homey.__('exception.validate_pair_timeout');
+        } else {
+          message = error.message;
+        }
+
+        // result not ok
+        socket.emit('station-api-error', message, (err, errData) => {
+          this.log(errData);
+        });
+      });
+
+      this.log('response');
+      this.log(response);
+
+      if (response !== undefined && response.data !== undefined
+        && response.data.sid !== undefined) {
+        socket.emit('station-api-ok', { sid: response.data.sid, did: response.data.did }, (err, errData) => {
+          this.log(errData);
+        });
+      } else if (response !== undefined) {
+        // result not ok
+        if (response.error.code === 403) {
+          socket.emit('station-api-2fa', '', (err, errData) => {
+            this.log(errData);
+          });
+        } else {
+          socket.emit('station-api-error', Homey.__('exception.validate_pair_failed'), (err, errData) => {
+            this.log(errData);
+          });
+        }
+      }
+    } catch (error) {
       socket.emit('station-api-error', error.message, (err, errData) => {
         this.log(errData);
       });
-    });
-
-    this.log('response');
-    this.log(response);
-
-    if (response !== undefined && response.data !== undefined && response.data.sid !== undefined) {
-      socket.emit('station-api-ok', { sid: response.data.sid, did: response.data.did }, (err, errData) => {
-        this.log(errData);
-      });
-    } else if (response !== undefined) {
-      // result not ok
-      if (response.error.code === 403) {
-        socket.emit('station-api-2fa', '', (err, errData) => {
-          this.log(errData);
-        });
-      } else {
-        socket.emit('station-api-error', 'API login failed', (err, errData) => {
-          this.log(errData);
-        });
-      }
+    } finally {
+      clearTimeout(timeout);
     }
-  }
-
-  async registerCameras() {
-    this.log('register cameras');
-
-    const cameras = await ManagerDrivers.getDriver('camera').getDevices();
-    this.log('total cameras', cameras.length);
-
-    const stations = {};
-
-    await Promise.all(cameras.map(async camera => {
-      const { id } = camera.getData();
-      const stationId = camera.getStoreValue('station_id');
-      if (stationId !== undefined && stationId.length > 0) {
-        try {
-          let station = stations[`${stationId}`];
-
-          // get station device
-          if (station === undefined) {
-            station = await this.getDevice({ id: `${stationId}` });
-            if (station !== undefined && station !== null && !(station instanceof Error)) {
-              stations[`${stationId}`] = station;
-            }
-          }
-
-          // register camera with station
-          camera.ready(() => {
-            station.registerCamera(id);
-          });
-        } catch (e) {
-          this.log(e);
-        }
-      }
-    }));
   }
 
   async getEncryptedAccount(account, password) {

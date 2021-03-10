@@ -50,7 +50,7 @@
                 // show error if any
                 Homey.alert(err, 'error');
             } else if(result===true) {
-              Homey.showView('motion');
+              Homey.showView('list_devices');
             } else {
                 Homey.hideLoadingOverlay();
                 Homey.alert(result, 'error');

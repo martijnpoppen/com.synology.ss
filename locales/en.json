@@ -56,9 +56,13 @@
   },
   "exception": {
     "authentication_failed": "Authentication failed, please repair your Surveillance Station",
+    "rule_update_failed": "Could not update or create rule, please make sure the user is a member of the administrator group in your Surveillance Station.",
     "initializing": "Initializing",
-    "rule_update_failed": "Could not update or create rule, please make sure the user is a member of the administrator group in your Surveillance Station."
-    "initializing": "Initializing",
-    "motion_timeout_tolow": "Timeout setting should be at least 10 seconds"
+    "motion_timeout_tolow": "Timeout setting should be at least 10 seconds",
+    "image_failed": "Failed to get Image",
+    "camera_disabled": "The camera is disabled",
+    "validate_pair_timeout": "Timeout, please make sure the settings are correct",
+    "validate_pair_failed": "Failed to connect, please make sure the settings are correct",
+    "no_station_found": "No Surveillance Station found, please click on repair and connect to your station."
   }
 }

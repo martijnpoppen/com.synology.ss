@@ -56,9 +56,13 @@
   },
   "exception": {
     "authentication_failed": "Fout bij het aanmelden, probeer de Surveillance Station te repareren.",
+    "rule_update_failed": "Kan de actie niet voltooien. Zorg er voor dat de gebruiker lid is van de groep administrators in de Surveillance Station.",
     "initializing": "Bezig met installeren",
-    "rule_update_failed": "Kan de actie niet voltooien. Zorg er voor dat de gebruiker lid is van de groep administrators in de Surveillance Station."
-    "initializing": "Bezig met installeren",
-    "motion_timeout_tolow": "Timeout instelling moet minimaal 10 seconde zijn."
+    "motion_timeout_tolow": "Timeout instelling moet minimaal 10 seconde zijn.",
+    "image_failed": "Snapshot maken mislukt",
+    "camera_disabled": "De camera is uitgeschakeld",
+    "validate_pair_timeout": "Timeout, controleer de instellingen en probeer het opnieuw",
+    "validate_pair_failed": "Inloggen niet gelukt, controleer de instellingen en probeer het opnieuw",
+    "no_station_found": "Geen Surveillance Station gevonden, klik op repareren en selecteer je Surveillance Station"
   }
 }

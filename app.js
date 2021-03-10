@@ -9,6 +9,8 @@ class MyApp extends Homey.App {
   async onInit() {
     this.log('Surveillance Station is running...');
 
+    this.stations = [];
+
     await this.initPassKey();
   }
 
@@ -75,6 +77,18 @@ class MyApp extends Homey.App {
     const result = JSON.parse(decrypted);
     this.log(result);
     return result;
+  }
+
+  async addStation(id) {
+    this.log('station ready: ', id);
+    this.stations.push(id);
+  }
+
+  isStationReady(id) {
+    if (this.stations.indexOf(id) !== -1) {
+      return true;
+    }
+    return false;
   }
 
 }

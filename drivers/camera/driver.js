@@ -6,9 +6,52 @@ const { ManagerDrivers } = require('homey');
 
 module.exports = class CameraDriver extends Homey.Driver {
 
+  async onInit() {
+    this._flowTriggerCameraEnabled = new Homey.FlowCardTriggerDevice('camera_enabled')
+      .register();
+
+    this._flowTriggerCameraDisabled = new Homey.FlowCardTriggerDevice('camera_disabled')
+      .register();
+
+    const extRecordStartAction = new Homey.FlowCardAction('ext_record_start');
+    extRecordStartAction
+      .register()
+      .registerRunListener(async args => {
+        const device = args.camera;
+        device.externalRecordStart().catch(this.error);
+        return true;
+      });
+
+    const extRecordStopAction = new Homey.FlowCardAction('ext_record_stop');
+    extRecordStopAction
+      .register()
+      .registerRunListener(async args => {
+        const device = args.camera;
+        device.externalRecordStop().catch(this.error);
+        return true;
+      });
+
+    const enableCamera = new Homey.FlowCardAction('enable_camera');
+    enableCamera
+      .register()
+      .registerRunListener(async args => {
+        const device = args.camera;
+        device.enableCamera().catch(this.error);
+        return true;
+      });
+
+    const disableCamera = new Homey.FlowCardAction('disable_camera');
+    disableCamera
+      .register()
+      .registerRunListener(async args => {
+        const device = args.camera;
+        device.disableCamera().catch(this.error);
+        return true;
+      });
+  }
+
   async onPair(socket) {
     let api;
-    let motionDetection = false;
     let stationId;
 
     socket.on('station', (data, callback) => {
@@ -35,12 +78,6 @@ module.exports = class CameraDriver extends Homey.Driver {
       // set data to api settings
       stationId = data.station;
 
-      callback(null, true);
-    });
-
-    socket.on('motion', (data, callback) => {
-      // set data to api settings
-      motionDetection = data.motion_detection;
       callback(null, true);
     });
 
@@ -82,9 +119,6 @@ module.exports = class CameraDriver extends Homey.Driver {
             name: cam.name,
             data: {
               id: cam.id,
-            },
-            settings: {
-              motion_detection: motionDetection,
             },
             store: {
               station_id: stationId,
@@ -144,6 +178,20 @@ module.exports = class CameraDriver extends Homey.Driver {
         })
         .catch(this.error);
     });
+  }
+
+  triggerCameraEnabled(device, tokens, state) {
+    this._flowTriggerCameraEnabled
+      .trigger(device, tokens, state)
+      .then(this.log)
+      .catch(this.error);
+  }
+
+  triggerCameraDisabled(device, tokens, state) {
+    this._flowTriggerCameraDisabled
+      .trigger(device, tokens, state)
+      .then(this.log)
+      .catch(this.error);
   }
 
 };

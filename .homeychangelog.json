@@ -35,5 +35,13 @@
   "3.0.1": {
     "en": "Credentials moved to Surveillance Station with option to save credentials for auto reconnect",
     "nl": "Inloggen verplaatst naar Surveillance Station met optie om deze op te slaan"
+  },
+  "3.1.0": {
+    "en": "Added camera enabled and disabled actions, triggers and conditions + timeout setting for motion detection",
+    "nl": "camera in- en uitschakel triggers, acties en condities toegevoegd + time-out instelling bewegingsdetectie"
+  },
+  "3.1.1": {
+    "en": "Added camera enabled and disabled actions, triggers and conditions + timeout setting for motion detection + bugfixes",
+    "nl": "camera in- en uitschakel triggers, acties en condities toegevoegd + time-out instelling bewegingsdetectie + bugfixes"
   }
 }

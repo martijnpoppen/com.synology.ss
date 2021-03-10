@@ -1,6 +1,7 @@
 'use strict';
 
 const Homey = require('homey');
+const { ManagerDrivers } = require('homey');
 const DeviceBase = require('../../lib/devicebase');
 
 class SynoCameraDevice extends DeviceBase {
@@ -10,60 +11,24 @@ class SynoCameraDevice extends DeviceBase {
    * @returns {Promise<void>}
    */
   async onInit() {
-    this.cameraImage = null;
-
     this.log('init device');
+
+    this.cameraImage = null;
+    this.motion_timer = null;
 
     this.setUnavailable(Homey.__('exception.initializing')).catch(this.error);
 
-    const data = this.getData();
-    const settings = this.getSettings();
-
-    this.log(data);
-    this.log(settings);
-
     await this.migrate();
 
-    // set image
-    await this.setImage();
-
-    // motion detection
-    this.motion_timer = null;
-
-    if (settings.motion_detection === true
-            && this.hasCapability('alarm_motion') === false) {
-      this.addCapability('alarm_motion').catch(this.error);
-      this.setCapabilityValue('alarm_motion', false);
+    const stationId = this.getStoreValue('station_id');
+    if (stationId !== undefined && stationId !== null) {
+      await this.initStation(stationId);
+    } else {
+      this.log('no station set for camera');
+      this.setUnavailable(Homey.__('exception.no_station_found')).catch(this.error);
     }
 
-    this.log('camera available');
-    this.setAvailable().catch(this.error);
-
-    // enable motion detection
-    if (this.added === true && settings.motion_detection === true) {
-      this.enableMotionDetection().catch(this.error);
-    }
-
-    this.added = false;
-
-    // flow actions
-    const extRecordStartAction = new Homey.FlowCardAction('ext_record_start');
-    extRecordStartAction
-      .register()
-      .registerRunListener(async args => {
-        const device = args.camera;
-        device.externalRecordStart().catch(this.error);
-        return true;
-      });
-
-    const extRecordStopAction = new Homey.FlowCardAction('ext_record_stop');
-    extRecordStopAction
-      .register()
-      .registerRunListener(async args => {
-        const device = args.camera;
-        device.externalRecordStop().catch(this.error);
-        return true;
-      });
+    this.log('init end');
   }
 
   /**
@@ -103,9 +68,185 @@ class SynoCameraDevice extends DeviceBase {
 
     await this.setSettings(newSettings).catch(this.error);
 
+    // add capability
+    if (this.hasCapability('button.repair_action_rules') === false) {
+      await this.addCapability('button.repair_action_rules');
+    }
+
     // set version
     this.setStoreValue('version', appVersion).catch(this.error);
     return true;
+  }
+
+  /**
+   * wait for the station to be ready
+   * @param {Number} stationId
+   */
+  async initStation(stationId) {
+    let timer = 0;
+    const intVal = setInterval(() => {
+      timer++;
+      const stationReady = Homey.app.isStationReady(stationId);
+      if (stationReady === true) {
+        this.log('stop timer, station is ready');
+        // finish
+        clearInterval(intVal);
+        this.onStationReady();
+      } else if (timer > 60) {
+        // timeout
+        this.log('stop timer, timeout');
+        this.setUnavailable(Homey.__('exception.no_station_found')).catch(this.error);
+        clearInterval(intVal);
+      }
+    }, 1000);
+  }
+
+  async repairActionRules() {
+    const successEnabled = await this.setCapabilityEnabled();
+    if (successEnabled === false) {
+      throw new Error('Could not set enabled/disabeld action rule');
+    }
+
+    const successMotionAlarm = await this.setCapabilityMotionAlarm();
+    if (successMotionAlarm === false) {
+      throw new Error('Could not set motion detection rule');
+    }
+  }
+
+  async syncMotionDetectionRule() {
+    this.log('sync motion detection rule');
+
+    const success = await this.enableMotionDetection();
+    this.log(success);
+
+    return success;
+  }
+
+  async syncEnabledRule() {
+    this.log('sync enabled rule');
+
+    const ruleEnabled = this.getStoreValue('rule_enabled');
+    this.log(ruleEnabled);
+
+    let createNewRule = false;
+
+    if (ruleEnabled === undefined || Number.isInteger(ruleEnabled) === false) {
+      createNewRule = true;
+    } else {
+      const rule = await this.getActionRule(ruleEnabled);
+      if (rule === false) {
+        createNewRule = true;
+      }
+    }
+
+    if (createNewRule === false) {
+      return true;
+    }
+
+    const success = await this.createEnabledRule();
+    this.log(success);
+
+    return success;
+  }
+
+  async syncDisabledRule() {
+    this.log('sync disabled rule');
+
+    const ruleDisabled = this.getStoreValue('rule_disabled');
+    this.log(ruleDisabled);
+
+    let createNewRule = false;
+
+    if (ruleDisabled === undefined || Number.isInteger(ruleDisabled) === false) {
+      createNewRule = true;
+    } else {
+      const rule = await this.getActionRule(ruleDisabled);
+      if (rule === false) {
+        createNewRule = true;
+      }
+    }
+
+    if (createNewRule === false) {
+      return true;
+    }
+
+    const success = await this.createDisabledRule();
+    this.log(success);
+
+    return success;
+  }
+
+  /**
+   * initialize motion alarm capability
+   * register capability listener for repair
+   * set capability
+   * @returns {Promise<void>}
+   */
+  async initCapabilityMotionAlarm() {
+    this.log('init capability motion alarm');
+
+    await this.setCapabilityMotionAlarm();
+  }
+
+  async setCapabilityMotionAlarm() {
+    this.log('set capability motion alarm');
+
+    const ruleSucces = await this.syncMotionDetectionRule();
+    if (ruleSucces === true) {
+      await this.addCapability('alarm_motion').catch(this.error);
+      await this.setCapabilityValue('alarm_motion', false).catch(this.error);
+    }
+
+    return ruleSucces;
+  }
+
+  /**
+   * initialize enabled capability
+   * register capability listener for repair
+   * set capability
+   * @returns {Promise<void>}
+   */
+  async initCapabilityEnabled() {
+    this.log('init capability enabled');
+
+    await this.setCapabilityEnabled();
+  }
+
+  async setCapabilityEnabled() {
+    this.log('set capability enabled');
+
+    const ruleEnabledSuccess = await this.syncEnabledRule();
+    const ruleDisabledSuccess = await this.syncDisabledRule();
+
+    if (ruleEnabledSuccess === true && ruleDisabledSuccess === true) {
+      await this.addCapability('enabled').catch(this.error);
+
+      // listener
+      await this.registerCapabilityListener('enabled', async value => {
+        this.log(`set enabled: ${value.toString()}`);
+        if (value === true) {
+          this.enableCamera();
+        } else {
+          this.disableCamera();
+        }
+        return true;
+      });
+
+      // condition
+      const enabledCondition = new Homey.FlowCardCondition('is_enabled');
+      enabledCondition
+        .register()
+        .registerRunListener(async (args, state) => {
+          return this.getCapabilityValue('enabled'); // Promise<boolean>
+        });
+
+      return true;
+    } if ((ruleEnabledSuccess === false || ruleDisabledSuccess === false) && this.hasCapability('enabled') === true) {
+      this.log('remove capability enabled');
+      await this.removeCapability('enabled');
+    }
+
+    return false;
   }
 
   /**
@@ -121,8 +262,38 @@ class SynoCameraDevice extends DeviceBase {
    */
   onDeleted() {
     this.log('on deleted');
-    // add motion detection rule
+
     this.deleteMotionDetectionRule().catch(this.error);
+
+    this.deleteEnabledRule().catch(this.error);
+
+    this.deleteDisabledRule().catch(this.error);
+  }
+
+  async setCurrentState() {
+    this.log('set currrent state');
+    const data = this.getData();
+
+    const qs = {
+      api: 'SYNO.SurveillanceStation.Camera',
+      method: 'GetInfo',
+      version: 8,
+      basic: true,
+      cameraIds: data.id,
+    };
+
+    const res = await this.fetchApi('/webapi/entry.cgi', qs);
+
+    if (res === undefined || res.data === undefined || res.data.cameras === undefined
+      || typeof res.data.cameras[0].enabled !== 'boolean') {
+      throw new Error('no current state found or wrong data returned from Synology');
+    }
+
+    this.log(`set enabled to ${res.data.cameras[0].enabled.toString()}`);
+
+    // set capability
+    this.setCapabilityValue('enabled', res.data.cameras[0].enabled)
+      .catch(this.error);
   }
 
   /**
@@ -152,9 +323,9 @@ class SynoCameraDevice extends DeviceBase {
           this.cameraImage.update();
           return Promise.resolve(true);
         });
+    } else {
+      await this.setImageStream();
     }
-
-    await this.setImageStream();
   }
 
   /**
@@ -173,12 +344,16 @@ class SynoCameraDevice extends DeviceBase {
     };
 
     this.cameraImage.setStream(async stream => {
+      if (this.getCapabilityValue('enabled') !== true) {
+        throw new Error(Homey.__('exception.camera_disabled'));
+      }
+
       const res = await this.fetchApi('/webapi/entry.cgi', qs);
-      this.log(res);
+
       try {
         res.body.pipe(stream);
       } catch (e) {
-        throw new Error('failed to get image');
+        throw new Error(Homey.__('exception.image_failed'));
       }
     });
   }
@@ -196,22 +371,9 @@ class SynoCameraDevice extends DeviceBase {
     this.log(newSettingsObj);
     this.log(changedKeysArr);
 
-    if(changedKeysArr.includes('motion_timeout')
+    if (changedKeysArr.includes('motion_timeout')
     && newSettingsObj.motion_timeout < 10) {
       throw new Error(Homey.__('exception.motion_timeout_tolow'));
-    }
-
-    if (changedKeysArr.includes('motion_detection')
-            && newSettingsObj.motion_detection === true) {
-      const success = await this.enableMotionDetection();
-      if (success !== true) {
-        throw new Error(Homey.__('exception.rule_update_failed'));
-      }
-    }
-
-    if (changedKeysArr.includes('motion_detection')
-            && newSettingsObj.motion_detection === false) {
-      await this.disableMotionDetection();
     }
   }
 
@@ -236,29 +398,6 @@ class SynoCameraDevice extends DeviceBase {
 
     if (success === true) {
       this.addCapability('alarm_motion').catch(this.error);
-    }
-
-    return success;
-  }
-
-  /**
-   * disable motion detection
-   * @returns {Promise<void>}
-   */
-  async disableMotionDetection() {
-    this.log('disable motion detection');
-
-    const rule = await this.getMotionDetectionRule();
-    let success;
-
-    if (rule !== false) {
-      // disable rule
-      success = await this.disableActionRule(rule);
-    }
-
-    if (success === true) {
-      this.removeCapability('alarm_motion')
-        .catch(this.error);
     }
 
     return success;
@@ -308,12 +447,6 @@ class SynoCameraDevice extends DeviceBase {
       return;
     }
 
-    const settings = this.getSettings();
-    if (settings.motion_detection === false) {
-      this.log('motion detection disabled');
-      return;
-    }
-
     if (this.motion_timer !== null) {
       this.log('clear timer');
       clearTimeout(this.motion_timer);
@@ -326,14 +459,14 @@ class SynoCameraDevice extends DeviceBase {
     }
 
     const that = this;
-    let motionTimeout=this.getMotionTimeoutSetting();
+    const motionTimeout = this.getMotionTimeoutSetting();
 
-    this.log('start new timer for '+motionTimeout+' sec');
+    this.log(`start new timer for ${motionTimeout} sec`);
     this.motion_timer = setTimeout(() => {
       that.setCapabilityValue('alarm_motion', false);
       that.motion_timer = null;
       this.log('device motion ended');
-    }, (motionTimeout*1000));
+    }, (motionTimeout * 1000));
   }
 
   /**
@@ -366,14 +499,116 @@ class SynoCameraDevice extends DeviceBase {
     await this.fetchApi('/webapi/entry.cgi', qs);
 
     // get and save action rule id
-    const ruleMotion = await this.getActionRuleMotionDetection(deviceApiMotionUrl);
+    const ruleMotion = await this.getActionRuleIdByUrl(deviceApiMotionUrl);
 
-    if (ruleMotion !== undefined && Number.isInteger(ruleMotion)) {
+    if (ruleMotion !== undefined && Number.isInteger(ruleMotion) && ruleMotion > 0) {
       this.setStoreValue('rule_motion', ruleMotion).catch(this.error);
       return true;
     }
 
     return false;
+  }
+
+  async createEnabledRule() {
+    this.log('create enabled rule');
+
+    // create rule
+    const homeyAddress = await this.getHomeyAddress();
+    const data = this.getData();
+    const webhookUrl = `${homeyAddress}/api/app/com.synology.ss/enabled/${data.id}`;
+
+    const qs = {
+      api: 'SYNO.SurveillanceStation.ActionRule',
+      method: 'Save',
+      version: 3,
+      name: `"Homey Enabled rule for ${this.getName()}"`,
+      multiRuleId: -1,
+      ruleType: 0,
+      actType: 0,
+      multiEvtSetting: 0,
+      evtMinIntvl: 10,
+      events: `[{"evtSrc":0,"evtDsId":0,"evtDevId":${data.id},"evtId":1,"evtItem":-1,"evtTrig":0,"evtWebhookToken":""}]`,
+      actions: `[{"id":-1,"actSrc":1,"actDsId":0,"actDevId":-1,"actId":-1,"actItemId":-1,"actTimes":1,"actTimeUnit":1,"actTimeDur":10,"actRetPos":-2,"extUrl":"${webhookUrl}","userName":"","password":"","iftttKey":"","iftttEvent":"","param1":"","param2":"","param3":"","webhookReqMethod":0,"httpContentType":0,"httpBody":""}]`,
+      actSchedule: '"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"',
+    };
+
+    await this.fetchApi('/webapi/entry.cgi', qs);
+
+    const ruleEnabled = await this.getActionRuleIdByUrl(webhookUrl);
+
+    if (ruleEnabled > 0) {
+      this.setStoreValue('rule_enabled', ruleEnabled).catch(this.error);
+      return true;
+    }
+
+    return false;
+  }
+
+  async createDisabledRule() {
+    this.log('create disabled rule');
+
+    // create rule
+    const homeyAddress = await this.getHomeyAddress();
+    const data = this.getData();
+    const webhookUrl = `${homeyAddress}/api/app/com.synology.ss/disabled/${data.id}`;
+
+    const qs = {
+      api: 'SYNO.SurveillanceStation.ActionRule',
+      method: 'Save',
+      version: 3,
+      name: `"Homey Disabled rule for ${this.getName()}"`,
+      multiRuleId: -1,
+      ruleType: 0,
+      actType: 0,
+      multiEvtSetting: 0,
+      evtMinIntvl: 10,
+      events: `[{"evtSrc":0,"evtDsId":0,"evtDevId":${data.id},"evtId":2,"evtItem":-1,"evtTrig":0,"evtWebhookToken":""}]`,
+      actions: `[{"id":-1,"actSrc":1,"actDsId":0,"actDevId":-1,"actId":-1,"actItemId":-1,"actTimes":1,"actTimeUnit":1,"actTimeDur":10,"actRetPos":-2,"extUrl":"${webhookUrl}","userName":"","password":"","iftttKey":"","iftttEvent":"","param1":"","param2":"","param3":"","webhookReqMethod":0,"httpContentType":0,"httpBody":""}]`,
+      actSchedule: '"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"',
+    };
+
+    await this.fetchApi('/webapi/entry.cgi', qs);
+
+    const ruleDisabled = await this.getActionRuleIdByUrl(webhookUrl);
+
+    if (ruleDisabled > 0) {
+      this.setStoreValue('rule_disabled', ruleDisabled).catch(this.error);
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * delete enabled rule
+   * @returns {Promise<void>}
+   */
+  async deleteEnabledRule() {
+    this.log('delete enabled rule');
+
+    const ruleEnabled = this.getStoreValue('rule_enabled');
+
+    if (ruleEnabled === undefined || Number.isInteger(ruleEnabled) === false) {
+      return;
+    }
+
+    await this.deleteActionRule(ruleEnabled);
+  }
+
+  /**
+   * delete disabled rule
+   * @returns {Promise<void>}
+   */
+  async deleteDisabledRule() {
+    this.log('delete disabled rule');
+
+    const ruleDisabled = this.getStoreValue('rule_disabled');
+
+    if (ruleDisabled === undefined || Number.isInteger(ruleDisabled) === false) {
+      return;
+    }
+
+    await this.deleteActionRule(ruleDisabled);
   }
 
   /**
@@ -385,65 +620,11 @@ class SynoCameraDevice extends DeviceBase {
 
     const ruleMotion = this.getStoreValue('rule_motion');
 
-    const qs = {
-      api: 'SYNO.SurveillanceStation.ActionRule',
-      method: 'Delete',
-      version: 1,
-      idList: ruleMotion,
-    };
-
-    await this.fetchApi('/webapi/entry.cgi', qs);
-  }
-
-  /**
-   * get motion detection rule
-   * @param deviceApiMotionUrl
-   * @returns {Promise<number>}
-   */
-  async getActionRuleMotionDetection(deviceApiMotionUrl) {
-    this.log('get motion detection rule');
-
-    const qs = {
-      api: 'SYNO.SurveillanceStation.ActionRule',
-      method: 'List',
-      version: 3,
-    };
-
-    const response = await this.fetchApi('/webapi/entry.cgi', qs);
-
-    if (response.data === undefined) {
-      throw new Error('no rules found');
+    if (ruleMotion === undefined || Number.isInteger(ruleMotion) === false) {
+      return;
     }
 
-    let ruleMatch = 0;
-    Object.keys(response.data.actRule).forEach(i => {
-      const rule = response.data.actRule[i];
-
-      Object.keys(rule.events).forEach(e => {
-        const event = rule.events[e];
-
-        this.log(event.evtDevName);
-        this.log(event.evtDevId);
-        this.log(event.evtId);
-      });
-
-      Object.keys(rule.actions).forEach(a => {
-        const action = rule.actions[a];
-
-        if (action.extUrl === deviceApiMotionUrl) {
-          // rule found!
-          this.log(`motion rule found: ${rule.ruleId}`);
-          ruleMatch = rule.ruleId;
-        }
-        return ruleMatch;
-      });
-    });
-
-    if (ruleMatch > 0) {
-      this.log(`rule ${ruleMatch} found`);
-      return ruleMatch;
-    }
-    throw new Error('no rule found');
+    await this.deleteActionRule(ruleMotion);
   }
 
   /**
@@ -527,11 +708,116 @@ class SynoCameraDevice extends DeviceBase {
   }
 
   getMotionTimeoutSetting() {
-    let motionTimeout = this.getSetting('motion_timeout');
-    if(motionTimeout!==undefined && Number.isInteger(motionTimeout) && motionTimeout >= 10) {
+    const motionTimeout = this.getSetting('motion_timeout');
+    if (motionTimeout !== undefined && Number.isInteger(motionTimeout) && motionTimeout >= 10) {
       return motionTimeout;
-    } else
-      return 21;
+    } return 21;
+  }
+
+  async enableCamera() {
+    this.log('enable camera');
+
+    const data = this.getData();
+    const qs = {
+      api: 'SYNO.SurveillanceStation.Camera',
+      method: 'Enable',
+      idList: data.id,
+      version: 9,
+    };
+
+    await this.fetchApi('/webapi/entry.cgi', qs);
+  }
+
+  async disableCamera() {
+    this.log('disable camera');
+
+    const data = this.getData();
+    const qs = {
+      api: 'SYNO.SurveillanceStation.Camera',
+      method: 'Disable',
+      idList: data.id,
+      version: 9,
+    };
+
+    await this.fetchApi('/webapi/entry.cgi', qs);
+  }
+
+  async onCameraEnabled() {
+    this.log('on camera enabled');
+
+    if (this.hasCapability('enabled') !== true) {
+      return;
+    }
+
+    if (this.getCapabilityValue('enabled') !== true) {
+      this.setCapabilityValue('enabled', true).catch(this.error);
+    }
+
+    this.getDriver().triggerCameraEnabled(this, { }, { });
+  }
+
+  async onCameraDisabled() {
+    this.log('on camera disabled');
+
+    if (this.hasCapability('enabled') !== true) {
+      return;
+    }
+
+    if (this.getCapabilityValue('enabled') !== false) {
+      this.setCapabilityValue('enabled', false).catch(this.error);
+    }
+
+    this.getDriver().triggerCameraDisabled(this, { }, { });
+  }
+
+  async onStationReady() {
+    this.log('on station ready');
+
+    await this.registerCameraForStation();
+
+    await this.initCapabilityMotionAlarm();
+    await this.initCapabilityEnabled();
+
+    this.registerCapabilityListener('button.repair_action_rules', async () => {
+      await this.repairActionRules();
+    });
+
+    await this.setImage();
+
+    await this.setCurrentState()
+      .then(() => {
+        this.setAvailable()
+          .catch(this.error);
+      })
+      .catch(err => {
+        this.log(err);
+      });
+  }
+
+  async getStation() {
+    this.log('get station');
+
+    const stationId = this.getStoreValue('station_id');
+
+    if (stationId !== undefined && stationId !== null) {
+      const station = ManagerDrivers.getDriver('station').getDevice({ id: `${stationId}` });
+      if (station !== undefined && station !== null && !(station instanceof Error)) {
+        return station;
+      }
+      this.log(station);
+    }
+    return false;
+  }
+
+  async registerCameraForStation() {
+    this.log('register camera for station');
+
+    const station = await this.getStation();
+    const data = this.getData();
+
+    if (station !== false) {
+      await station.registerCamera(data.id);
+    }
   }
 
 }

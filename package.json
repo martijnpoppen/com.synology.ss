@@ -7,6 +7,7 @@
     "url": "https://github.com/marcschut002/athom.com.synology.ss.git"
   },
   "dependencies": {
+    "abort-controller": "^3.0.0",
     "homey-log": "^1.0.6",
     "node-fetch": "^2.6.1",
     "node-gzip": "^1.1.2",

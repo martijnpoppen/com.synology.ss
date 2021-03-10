@@ -1,6 +1,6 @@
 {
   "id": "com.synology.ss",
-  "version": "3.0.1",
+  "version": "3.1.1",
   "compatibility": ">=4.1.0",
   "sdk": 2,
   "name": {
@@ -54,6 +54,24 @@
         "en": "Leave Home Mode",
         "nl": "Home Mode Verlaten"
       }
+    },
+    "enabled": {
+      "type": "boolean",
+      "title": {
+        "nl": "Ingeschakeld",
+        "en": "Enabled"
+      },
+      "getable": true,
+      "setable": true,
+      "insights": true,
+      "insightsTitleTrue": {
+        "en": "Enabled",
+        "nl": "Ingeschakeld"
+      },
+      "insightsTitleFalse": {
+        "en": "Disabled",
+        "nl": "Uitgeschakeld"
+      }
     }
   },
   "drivers": [
@@ -67,7 +85,23 @@
         "large": "/drivers/camera/assets/images/large.png",
         "small": "/drivers/camera/assets/images/small.png"
       },
-      "capabilities": [],
+      "capabilities": [
+        "enabled",
+        "button.repair_action_rules"
+      ],
+      "capabilitiesOptions": {
+        "button.repair_action_rules": {
+          "maintenanceAction": true,
+          "title": {
+            "en": "Repair Action Rules",
+            "nl": "Repareer Actieregels"
+          },
+          "desc": {
+            "en": "Use this if you are missing some (or all) action rules on your Synology Surveillance Station. This action will check and install the necessary action rules.",
+            "nl": "Gebruik deze actie als je een aantal (of alle) actieregels mist op je Synology Surveillance Station. Deze actie installeert de noodzakelijke actieregels."
+          }
+        }
+      },
       "settings": [
         {
           "type": "group",
@@ -75,19 +109,6 @@
             "en": "Motion Detection"
           },
           "children": [
-            {
-              "id": "motion_detection",
-              "type": "checkbox",
-              "label": {
-                "en": "Active",
-                "nl": "Actief"
-              },
-              "hint": {
-                "en": "The user needs to be a member of the administrator group for this setting to work properly.",
-                "nl": "De gebruiker moet lid zijn van de administrator groep om deze optie te kunnen activeren."
-              },
-              "value": false
-            },
             {
               "id": "motion_timeout",
               "type": "number",
@@ -114,9 +135,6 @@
         },
         {
           "id": "nostation"
-        },
-        {
-          "id": "motion"
         },
         {
           "id": "done",
@@ -160,7 +178,23 @@
         "large": "/drivers/station/assets/images/large.png",
         "small": "/drivers/station/assets/images/small.png"
       },
-      "capabilities": ["home_mode"],
+      "capabilities": [
+        "home_mode",
+        "button.repair_action_rules"
+      ],
+      "capabilitiesOptions": {
+        "button.repair_action_rules": {
+          "maintenanceAction": true,
+          "title": {
+            "en": "Repair Action Rules",
+            "nl": "Repareer Actieregels"
+          },
+          "desc": {
+            "en": "Use this if you are missing some (or all) action rules on your Synology Surveillance Station. This action will check and install the necessary action rules.",
+            "nl": "Gebruik deze actie als je een aantal (of alle) actieregels mist op je Synology Surveillance Station. Deze actie installeert de noodzakelijke actieregels."
+          }
+        }
+      },
       "settings": [],
       "pair": [
         {
@@ -174,6 +208,9 @@
           "template": "list_devices",
           "navigation": {
             "next": "add_devices"
+          },
+          "options": {
+            "singular": true
           }
         },
         {
@@ -222,6 +259,50 @@
             "name": "station",
             "type": "device",
             "filter": "driver_id=station"
+          }
+        ]
+      },
+      {
+        "id": "camera_disabled",
+        "title": {
+          "en": "Camera Disabled",
+          "nl": "Camera Uitgeschakeld"
+        },
+        "args": [
+          {
+            "name": "camera",
+            "type": "device",
+            "filter": "driver_id=camera"
+          }
+        ]
+      },
+      {
+        "id": "camera_enabled",
+        "title": {
+          "en": "Camera Enabled",
+          "nl": "Camera Ingeschakeld"
+        },
+        "args": [
+          {
+            "name": "camera",
+            "type": "device",
+            "filter": "driver_id=camera"
+          }
+        ]
+      }
+    ],
+    "conditions": [
+      {
+        "id": "is_enabled",
+        "title": {
+          "en": "!{{Enabled|Disabled}}",
+          "nl": "!{{Ingeschakeld|Uitgeschakeld}}"
+        },
+        "args": [
+          {
+            "name": "camera",
+            "type": "device",
+            "filter": "driver_id=camera"
           }
         ]
       }
@@ -288,6 +369,34 @@
         "title": {
           "en": "Stop Recording",
           "nl": "Stop Opname"
+        },
+        "args": [
+          {
+            "name": "camera",
+            "type": "device",
+            "filter": "driver_id=camera"
+          }
+        ]
+      },
+      {
+        "id": "enable_camera",
+        "title": {
+          "en": "Enable",
+          "nl": "Inschakelen"
+        },
+        "args": [
+          {
+            "name": "camera",
+            "type": "device",
+            "filter": "driver_id=camera"
+          }
+        ]
+      },
+      {
+        "id": "disable_camera",
+        "title": {
+          "en": "Disable",
+          "nl": "Uitschakelen"
         },
         "args": [
           {

@@ -9,36 +9,28 @@ class StationDevice extends DeviceBase {
 
   async onInit() {
     this.log('init device');
+
     this.setUnavailable(Homey.__('exception.initializing'))
       .catch(this.error);
 
     const data = this.getData();
-    const settings = this.getSettings();
 
-    this.log(data);
-    this.log(settings);
-
-    // clear camera's
     await this.unsetStoreValue('cameras').catch(this.error);
 
     this.ready(() => {
-      Homey.app.log('station is ready', data.id);
+      Homey.app.addStation(data.id);
     });
 
     await this.migrate();
 
-    this.registerCapabilityListener('home_mode', async value => {
-      this.log(`set home mode: ${value.toString()}`);
-      this.setHomeMode(value);
-      return true;
-    });
+    await this.initCapabilities();
 
     const setHomeModeOnAction = new Homey.FlowCardAction('home_mode_on');
     setHomeModeOnAction
       .register()
       .registerRunListener(async args => {
         const device = args.station;
-        device.setHomeMode(true); // Promise<void>
+        device.setHomeMode(true);
         return true;
       });
 
@@ -51,7 +43,6 @@ class StationDevice extends DeviceBase {
         return true;
       });
 
-    // get/set current state
     this.setCurrentState()
       .then(() => {
         this.setAvailable()
@@ -64,26 +55,6 @@ class StationDevice extends DeviceBase {
 
   async onAdded() {
     this.log('on added');
-
-    // Home Mode On rule
-    const ruleOn = await this.getHomeModeRule('on');
-    if (ruleOn !== false) {
-      // enable rule
-      await this.enableActionRule(ruleOn);
-    } else {
-      // add action rule
-      await this.createHomeModeRule('on');
-    }
-
-    // Home Mode Off rule
-    const ruleOff = await this.getHomeModeRule('off');
-    if (ruleOff !== false) {
-      // enable rule
-      await this.enableActionRule(ruleOff);
-    } else {
-      // add action rule
-      await this.createHomeModeRule('off');
-    }
   }
 
   onDeleted() {
@@ -122,6 +93,18 @@ class StationDevice extends DeviceBase {
     this.setStoreValue('version', appVersion)
       .catch(this.error);
     return true;
+  }
+
+  async initCapabilities() {
+    if (this.hasCapability('button.repair_action_rules') === false) {
+      await this.addCapability('button.repair_action_rules');
+    }
+
+    this.registerCapabilityListener('button.repair_action_rules', async () => {
+      await this.repairActionRules();
+    });
+
+    await this.initCapabilityHomeMode();
   }
 
   async getHomeModeRule(state) {
@@ -320,30 +303,9 @@ class StationDevice extends DeviceBase {
     }
   }
 
-  async testApi() {
-    this.log('test api');
-    const qs = {
-      api: 'SYNO.SurveillanceStation.HomeMode',
-      method: 'Switch',
-      version: 1,
-      on: false,
-    };
-    try {
-      this.log('test try');
-      const response = await this.fetchApi('/webapi/entry.cgi', qs);
-      this.log('response X');
-      this.log(response);
-    } catch (e) {
-      this.log('test catch');
-      this.pairException();
-    }
-    this.log('test end');
-  }
-
   async registerCamera(id) {
     this.log('register camera', id);
     let cameras = this.getStoreValue('cameras');
-    this.log(cameras);
 
     if (cameras === null || cameras === undefined) {
       this.log('new array with cameras');
@@ -353,6 +315,8 @@ class StationDevice extends DeviceBase {
     if (cameras.indexOf(id) === -1) {
       cameras.push(id);
     }
+
+    this.log(cameras);
 
     await this.setStoreValue('cameras', cameras)
       .catch(this.error);
@@ -373,8 +337,7 @@ class StationDevice extends DeviceBase {
 
     await Promise.all(cameras.map(async cameraId => {
       this.log(cameraId);
-      const camera = await ManagerDrivers.getDriver('camera').getDevice({ id: Number(cameraId) });
-      this.log(camera);
+      const camera = ManagerDrivers.getDriver('camera').getDevice({ id: Number(cameraId) });
       if (camera !== undefined && camera !== null && !(camera instanceof Error)) {
         await camera.onNewSid();
       }
@@ -402,12 +365,60 @@ class StationDevice extends DeviceBase {
 
     await Promise.all(cameras.map(async cameraId => {
       this.log(cameraId);
-      const camera = await ManagerDrivers.getDriver('camera').getDevice({ id: Number(cameraId) });
-      this.log(camera);
+      const camera = ManagerDrivers.getDriver('camera').getDevice({ id: Number(cameraId) });
       if (camera !== undefined && camera !== null && !(camera instanceof Error)) {
         await camera.onSidFail();
       }
     }));
+  }
+
+  async initCapabilityHomeMode() {
+    if (this.hasCapability('home_mode') === false) {
+      await this.addCapability('home_mode');
+    }
+
+    await this.setCapabilityHomeModeRules();
+
+    this.registerCapabilityListener('home_mode', async value => {
+      this.log(`set home mode: ${value.toString()}`);
+      this.setHomeMode(value);
+      return true;
+    });
+  }
+
+  async setCapabilityHomeModeRules() {
+    try {
+      // Home Mode On rule
+      const ruleOn = await this.getHomeModeRule('on');
+      if (ruleOn !== false) {
+        // enable rule
+        await this.enableActionRule(ruleOn);
+      } else {
+        // add action rule
+        await this.createHomeModeRule('on');
+      }
+
+      // Home Mode Off rule
+      const ruleOff = await this.getHomeModeRule('off');
+      if (ruleOff !== false) {
+        // enable rule
+        await this.enableActionRule(ruleOff);
+      } else {
+        // add action rule
+        await this.createHomeModeRule('off');
+      }
+      return true;
+    } catch (err) {
+      this.log(err);
+      return false;
+    }
+  }
+
+  async repairActionRules() {
+    const successHomeMode = await this.setCapabilityHomeModeRules();
+    if (successHomeMode === false) {
+      throw new Error('Could not set home mode action rules');
+    }
   }
 
 }
