@@ -19,12 +19,8 @@
             'store_credentials': document.getElementById("store_credentials").checked,
         };
 
-        Homey.emit( 'station-api', data, function( err, result ){
-            if(err !== null) {
-                Homey.hideLoadingOverlay();
-                // show error if any
-                Homey.alert(err, 'error');
-            } else if(result===true) {
+        Homey.emit( 'station-api', data).then(function( result ){
+            if(result===true) {
                 console.log('login in progress');
             } else {
                 Homey.hideLoadingOverlay();
@@ -36,8 +32,8 @@
         event.preventDefault();
     }
 
-    Homey.on('station-api-ok', function( data, callback ){
-        Homey.emit('sid', { sid: data.sid, did: data.did }, function(err, result){
+    Homey.on('station-api-ok', function( data ){
+        Homey.emit('sid', { sid: data.sid, did: data.did }).then(function( result ){
             if(result===true) {
                 Homey.showView('list_devices');
             }
@@ -45,12 +41,12 @@
         });
     });
 
-    Homey.on('station-api-error', function( message, callback ){
+    Homey.on('station-api-error', function( message ){
         Homey.hideLoadingOverlay();
         Homey.alert( message, 'error' );
     });
 
-    Homey.on('station-api-2fa', function( message, callback ){
+    Homey.on('station-api-2fa', function( message ){
       Homey.showView('2fa');
     });
 

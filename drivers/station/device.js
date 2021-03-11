@@ -1,8 +1,5 @@
 'use strict';
 
-const Homey = require('homey');
-const { ManagerDrivers } = require('homey');
-const { ManagerNotifications } = require('homey');
 const DeviceBase = require('../../lib/devicebase');
 
 class StationDevice extends DeviceBase {
@@ -10,40 +7,16 @@ class StationDevice extends DeviceBase {
   async onInit() {
     this.log('init device');
 
-    this.setUnavailable(Homey.__('exception.initializing'))
+    this.setUnavailable(this.homey.__('exception.initializing'))
       .catch(this.error);
 
-    const data = this.getData();
-
     await this.unsetStoreValue('cameras').catch(this.error);
-
-    this.ready(() => {
-      Homey.app.addStation(data.id);
-    });
 
     await this.migrate();
 
     await this.initCapabilities();
 
-    const setHomeModeOnAction = new Homey.FlowCardAction('home_mode_on');
-    setHomeModeOnAction
-      .register()
-      .registerRunListener(async args => {
-        const device = args.station;
-        device.setHomeMode(true);
-        return true;
-      });
-
-    const setHomeModeOffAction = new Homey.FlowCardAction('home_mode_off');
-    setHomeModeOffAction
-      .register()
-      .registerRunListener(async args => {
-        const device = args.station;
-        device.setHomeMode(false);
-        return true;
-      });
-
-    this.setCurrentState()
+    await this.setCurrentState()
       .then(() => {
         this.setAvailable()
           .catch(this.error);
@@ -51,6 +24,8 @@ class StationDevice extends DeviceBase {
       .catch(err => {
         this.log(err);
       });
+
+    this.homey.app.addStation(this.getData().id);
   }
 
   async onAdded() {
@@ -66,7 +41,7 @@ class StationDevice extends DeviceBase {
   async migrate() {
     this.log('migrate device');
 
-    const appVersion = Homey.manifest.version;
+    const appVersion = this.homey.manifest.version;
     const deviceVersion = this.getStoreValue('version');
 
     this.log(appVersion);
@@ -280,26 +255,14 @@ class StationDevice extends DeviceBase {
   async onHomeModeStatusChange(value) {
     this.log(`on home mode state change to ${value.toString()}`);
 
-    if (this.getCapabilityValue('home_mode') === value) {
-      this.log(`device state already ${value.toString()}`);
-      return;
+    if (this.getCapabilityValue('home_mode') !== value) {
+      this.setCapabilityValue('home_mode', value).catch(this.error);
     }
 
-    // set capability
-    this.setCapabilityValue('home_mode', value)
-      .catch(this.error);
-
-    // trigger flows
-    const device = this;
-    const tokens = {};
-    const state = {};
-
-    this._driver = this.getDriver();
-
     if (value === false) {
-      this._driver.triggerHomeModeOff(device, tokens, state);
+      this.driver.triggerHomeModeOff(this, {}, {});
     } else if (value === true) {
-      this._driver.triggerHomeModeOn(device, tokens, state);
+      this.driver.triggerHomeModeOn(this, {}, {});
     }
   }
 
@@ -337,7 +300,7 @@ class StationDevice extends DeviceBase {
 
     await Promise.all(cameras.map(async cameraId => {
       this.log(cameraId);
-      const camera = ManagerDrivers.getDriver('camera').getDevice({ id: Number(cameraId) });
+      const camera = this.homey.drivers.getDriver('camera').getDevice({ id: Number(cameraId) });
       if (camera !== undefined && camera !== null && !(camera instanceof Error)) {
         await camera.onNewSid();
       }
@@ -351,9 +314,9 @@ class StationDevice extends DeviceBase {
   async onSidFail() {
     this.log('station sid failed');
 
-    this.setUnavailable(Homey.__('exception.authentication_failed'));
+    this.setUnavailable(this.homey.__('exception.authentication_failed'));
 
-    ManagerNotifications.registerNotification({ excerpt: Homey.__('exception.authentication_failed') }, (e, n) => {});
+    this.homey.notifications.registerNotification({ excerpt: this.homey.__('exception.authentication_failed') }, (e, n) => { });
 
     const cameras = await this.getStoreValue('cameras');
     if (cameras === null || cameras === undefined || cameras.length === 0) {
@@ -365,7 +328,7 @@ class StationDevice extends DeviceBase {
 
     await Promise.all(cameras.map(async cameraId => {
       this.log(cameraId);
-      const camera = ManagerDrivers.getDriver('camera').getDevice({ id: Number(cameraId) });
+      const camera = this.homey.drivers.getDriver('camera').getDevice({ id: Number(cameraId) });
       if (camera !== undefined && camera !== null && !(camera instanceof Error)) {
         await camera.onSidFail();
       }

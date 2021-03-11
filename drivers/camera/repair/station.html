@@ -11,7 +11,7 @@
     // show loading overlay
     Homey.showLoadingOverlay();
 
-    Homey.emit( 'station', {}, function( err, result ){
+    Homey.emit( 'station', {}).then(function( result ){
 
       let station_sel = document.getElementById('station');
       station_sel.length = 0;
@@ -43,12 +43,8 @@
             'station': document.querySelector('select[name="station"]').value
         };
 
-        Homey.emit( 'station_save', data, function( err, result ){
-            if(err !== null) {
-                Homey.hideLoadingOverlay();
-                // show error if any
-                Homey.alert(err, 'error');
-            } else if(result===true) {
+        Homey.emit( 'station_save', data).then(function( result ){
+            if(result===true) {
                 Homey.confirm( Homey.__('repair.camera.done'), 'info', function(){
                 Homey.showView('done');
               });

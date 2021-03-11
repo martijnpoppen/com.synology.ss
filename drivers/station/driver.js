@@ -8,11 +8,18 @@ const AbortController = require('abort-controller');
 module.exports = class StationDriver extends Homey.Driver {
 
   onInit() {
-    this._flowTriggerHomeModeOn = new Homey.FlowCardTriggerDevice('home_mode_on')
-      .register();
+    this._flowTriggerHomeModeOn = this.homey.flow.getDeviceTriggerCard('home_mode_on');
+    this._flowTriggerHomeModeOff = this.homey.flow.getDeviceTriggerCard('home_mode_off');
 
-    this._flowTriggerHomeModeOff = new Homey.FlowCardTriggerDevice('home_mode_off')
-      .register();
+    this.homey.flow.getActionCard('home_mode_on').registerRunListener(async args => {
+      await args.station.setHomeMode(true);
+      return true;
+    });
+
+    this.homey.flow.getActionCard('home_mode_off').registerRunListener(async args => {
+      await args.station.setHomeMode(false);
+      return true;
+    });
   }
 
   triggerHomeModeOn(device, tokens, state) {
@@ -29,28 +36,27 @@ module.exports = class StationDriver extends Homey.Driver {
       .catch(this.error);
   }
 
-  async onPair(socket) {
+  async onPair(session) {
     let api;
     let sid;
     let did;
 
-    socket.on('station-api', (data, callback) => {
+    session.setHandler('station-api', async data => {
       // set data to api settings
       api = data;
 
-      this.validateAPI(socket, data, this);
-      callback(null, true);
+      this.validateAPI(session, data, this);
+      return true;
     });
 
-    socket.on('station-api-2fa', (data, callback) => {
-      // set data to api settings
+    session.setHandler('station-api-2fa', async data => {
       api.otp_code = data.otp_code;
 
-      this.validateAPI(socket, api, this);
-      callback(null, true);
+      this.validateAPI(session, api, this);
+      return true;
     });
 
-    socket.on('list_devices', async (data, callback) => {
+    session.setHandler('list_devices', async data => {
       this.log(data);
       this.log(api);
       this.log(sid);
@@ -81,41 +87,41 @@ module.exports = class StationDriver extends Homey.Driver {
       }];
 
       this.log(devices);
-      callback(null, devices);
+      return devices;
     });
 
-    socket.on('sid', (data, callback) => {
+    session.setHandler('sid', async data => {
       this.log(data);
       this.log('sid');
 
       sid = data.sid;
       did = data.did;
 
-      callback(null, true);
+      return true;
     });
   }
 
-  onRepair(socket, device) {
+  onRepair(session, device) {
     this.log('on repair');
     let api;
 
-    socket.on('station-api', (data, callback) => {
+    session.setHandler('station-api', async data => {
       // set data to api settings
       api = data;
 
-      this.validateAPI(socket, data);
-      callback(null, true);
+      this.validateAPI(session, data);
+      return true;
     });
 
-    socket.on('station-api-2fa', (data, callback) => {
+    session.setHandler('station-api-2fa', async data => {
       // set data to api settings
       api.otp_code = data.otp_code;
 
-      this.validateAPI(socket, api);
-      callback(null, true);
+      this.validateAPI(session, api);
+      return true;
     });
 
-    socket.on('sid', async (data, callback) => {
+    session.setHandler('sid', async data => {
       this.log('sid');
       this.log(data);
       this.log(api);
@@ -145,11 +151,11 @@ module.exports = class StationDriver extends Homey.Driver {
       device.setAvailable()
         .catch(this.error);
 
-      callback(null, true);
+      return true;
     });
   }
 
-  async validateAPI(socket, data) {
+  async validateAPI(session, data) {
     this.log('validateAPI');
     this.log(data);
 
@@ -200,7 +206,7 @@ module.exports = class StationDriver extends Homey.Driver {
         }
 
         // result not ok
-        socket.emit('station-api-error', message, (err, errData) => {
+        session.emit('station-api-error', message, (err, errData) => {
           this.log(errData);
         });
       });
@@ -210,23 +216,23 @@ module.exports = class StationDriver extends Homey.Driver {
 
       if (response !== undefined && response.data !== undefined
         && response.data.sid !== undefined) {
-        socket.emit('station-api-ok', { sid: response.data.sid, did: response.data.did }, (err, errData) => {
+        session.emit('station-api-ok', { sid: response.data.sid, did: response.data.did }, (err, errData) => {
           this.log(errData);
         });
       } else if (response !== undefined) {
         // result not ok
         if (response.error.code === 403) {
-          socket.emit('station-api-2fa', '', (err, errData) => {
+          session.emit('station-api-2fa', '', (err, errData) => {
             this.log(errData);
           });
         } else {
-          socket.emit('station-api-error', Homey.__('exception.validate_pair_failed'), (err, errData) => {
+          session.emit('station-api-error', this.homey.__('exception.validate_pair_failed'), (err, errData) => {
             this.log(errData);
           });
         }
       }
     } catch (error) {
-      socket.emit('station-api-error', error.message, (err, errData) => {
+      session.emit('station-api-error', error.message, (err, errData) => {
         this.log(errData);
       });
     } finally {

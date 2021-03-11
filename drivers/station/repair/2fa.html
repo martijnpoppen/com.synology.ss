@@ -14,12 +14,8 @@
             'otp_code': document.getElementById("otp_code").value
         };
 
-        Homey.emit( 'station-api-2fa', data, function( err, result ){
-            if(err !== null) {
-                Homey.hideLoadingOverlay();
-                // show error if any
-                Homey.alert(err, 'error');
-            } else if(result===true) {
+        Homey.emit( 'station-api-2fa', data).then(function( result ){
+            if(result===true) {
                 console.log('login in progress');
             } else {
                 Homey.hideLoadingOverlay();
@@ -31,8 +27,8 @@
         event.preventDefault();
     }
 
-    Homey.on('station-api-ok', function( data, callback ){
-        Homey.emit('sid', { sid: data.sid, did: data.did }, function(err, result){
+    Homey.on('station-api-ok', function( data ){
+        Homey.emit('sid', { sid: data.sid, did: data.did }).then(function( result ){
             if(result===true) {
                 Homey.confirm( Homey.__('repair.api.done'), 'info', function(){
                   Homey.showView('done');
@@ -42,12 +38,12 @@
         });
     });
 
-    Homey.on('station-api-error', function( message, callback ){
+    Homey.on('station-api-error', function( message ){
         Homey.hideLoadingOverlay();
         Homey.alert( message, 'error' );
     });
 
-    Homey.on('station-api-2fa', function( message, callback ){
+    Homey.on('station-api-2fa', function( message ){
       Homey.hideLoadingOverlay();
     });
 

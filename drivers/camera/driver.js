@@ -2,63 +2,52 @@
 
 const Homey = require('homey');
 const fetch = require('node-fetch');
-const { ManagerDrivers } = require('homey');
 
 module.exports = class CameraDriver extends Homey.Driver {
 
   async onInit() {
-    this._flowTriggerCameraEnabled = new Homey.FlowCardTriggerDevice('camera_enabled')
-      .register();
+    this._flowTriggerCameraEnabled = this.homey.flow.getDeviceTriggerCard('camera_enabled');
+    this._flowTriggerCameraDisabled = this.homey.flow.getDeviceTriggerCard('camera_disabled');
 
-    this._flowTriggerCameraDisabled = new Homey.FlowCardTriggerDevice('camera_disabled')
-      .register();
+    this.homey.flow.getActionCard('ext_record_start').registerRunListener(async args => {
+      await args.camera.externalRecordStart().catch(this.error);
+      return true;
+    });
 
-    const extRecordStartAction = new Homey.FlowCardAction('ext_record_start');
-    extRecordStartAction
-      .register()
-      .registerRunListener(async args => {
-        const device = args.camera;
-        device.externalRecordStart().catch(this.error);
-        return true;
-      });
+    this.homey.flow.getActionCard('ext_record_stop').registerRunListener(async args => {
+      await args.camera.externalRecordStop().catch(this.error);
+      return true;
+    });
 
-    const extRecordStopAction = new Homey.FlowCardAction('ext_record_stop');
-    extRecordStopAction
-      .register()
-      .registerRunListener(async args => {
-        const device = args.camera;
-        device.externalRecordStop().catch(this.error);
-        return true;
-      });
+    this.homey.flow.getActionCard('enable_camera').registerRunListener(async args => {
+      await args.camera.enableCamera().catch(this.error);
+      return true;
+    });
 
-    const enableCamera = new Homey.FlowCardAction('enable_camera');
-    enableCamera
-      .register()
-      .registerRunListener(async args => {
-        const device = args.camera;
-        device.enableCamera().catch(this.error);
-        return true;
-      });
+    this.homey.flow.getActionCard('disable_camera').registerRunListener(async args => {
+      await args.camera.disableCamera().catch(this.error);
+      return true;
+    });
 
-    const disableCamera = new Homey.FlowCardAction('disable_camera');
-    disableCamera
-      .register()
-      .registerRunListener(async args => {
-        const device = args.camera;
-        device.disableCamera().catch(this.error);
-        return true;
-      });
+    this.homey.flow.getActionCard('update_image').registerRunListener(async args => {
+      await args.camera.snapshot.update();
+      return true;
+    });
+
+    this.homey.flow.getConditionCard('is_enabled').registerRunListener(async (args, state) => {
+      return args.camera.getCapabilityValue('enabled');
+    });
   }
 
-  async onPair(socket) {
+  async onPair(session) {
     let api;
     let stationId;
 
-    socket.on('station', (data, callback) => {
+    session.setHandler('station', async data => {
       this.log('on station');
       const stations = [];
 
-      const devices = ManagerDrivers.getDriver('station').getDevices();
+      const devices = this.homey.drivers.getDriver('station').getDevices();
       this.log(devices);
 
       Object.keys(devices).forEach(i => {
@@ -71,22 +60,20 @@ module.exports = class CameraDriver extends Homey.Driver {
       });
 
       this.log(stations);
-      callback(null, stations);
+      return stations;
     });
 
-    socket.on('station_save', (data, callback) => {
-      // set data to api settings
+    session.setHandler('station_save', async data => {
       stationId = data.station;
-
-      callback(null, true);
+      return true;
     });
 
-    socket.on('list_devices', async (data, callback) => {
+    session.setHandler('list_devices', async data => {
       this.log(data);
       this.log(api);
       this.log(stationId);
 
-      const stationDevice = ManagerDrivers.getDriver('station').getDevice({ id: `${stationId}` });
+      const stationDevice = this.homey.drivers.getDriver('station').getDevice({ id: `${stationId}` });
       this.log(stationDevice);
 
       const qs = {
@@ -129,23 +116,24 @@ module.exports = class CameraDriver extends Homey.Driver {
         });
 
         this.log(devices);
-        callback(null, devices);
+        return devices;
       }).catch(error => {
         this.log('There has been a problem with your fetch operation:', error);
-        callback(new Error('There has been a problem with your fetch operation:', error));
+        throw Error('There has been a problem with your fetch operation:', error);
       });
       this.log(response);
+      return response;
     });
   }
 
-  onRepair(socket, device) {
+  onRepair(session, device) {
     this.log('on repair');
 
-    socket.on('station', (data, callback) => {
+    session.setHandler('station', async data => {
       this.log('on station');
       const stations = [];
 
-      const devices = ManagerDrivers.getDriver('station').getDevices();
+      const devices = this.homey.drivers.getDriver('station').getDevices();
       this.log(devices);
 
       Object.keys(devices).forEach(i => {
@@ -158,14 +146,12 @@ module.exports = class CameraDriver extends Homey.Driver {
       });
 
       this.log(stations);
-      callback(null, stations);
+      return stations;
     });
 
-    socket.on('station_save', (data, callback) => {
-      // set data to api settings
+    session.setHandler('station_save', async data => {
       device.setStoreValue('station_id', `${data.station}`)
         .then(async () => {
-          // validate connection
           const success = await device.validatePair();
 
           if (success === true) {
@@ -173,8 +159,7 @@ module.exports = class CameraDriver extends Homey.Driver {
           } else {
             device.setUnavailable('authentication failed');
           }
-
-          callback(null, success);
+          return success;
         })
         .catch(this.error);
     });
