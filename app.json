@@ -341,6 +341,7 @@
           "en": "Update camera image",
           "nl": "Update camera afbeelding"
         },
+        "deprecated": true,
         "args": [
           {
             "name": "camera",
