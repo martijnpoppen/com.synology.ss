@@ -16,7 +16,7 @@
             'otp_code': document.getElementById("otp_code").value
         };
 
-        Homey.emit( 'station-api-2fa', data, function( err, result ){
+        Homey.emit( 'station-api-2fa', data).then(function( err, result ){
             if(err !== null) {
                 Homey.hideLoadingOverlay();
                 // show error if any
@@ -34,7 +34,7 @@
     }
 
     Homey.on('station-api-ok', function( data, callback ){
-        Homey.emit('sid', { sid: data.sid, did: data.did }, function(err, result){
+        Homey.emit('sid', { sid: data.sid, did: data.did }).then(function(err, result){
             if(result===true) {
               Homey.showView('list_devices');
             }

@@ -43,5 +43,9 @@
   "3.1.1": {
     "en": "Added camera enabled and disabled actions, triggers and conditions + timeout setting for motion detection + bugfixes",
     "nl": "camera in- en uitschakel triggers, acties en condities toegevoegd + time-out instelling bewegingsdetectie + bugfixes"
+  },
+  "3.2.0": {
+    "en": "SDK3 + Snapshot Quality Setting + bugfixes",
+    "nl": "SDK3 + Snapshot Quality Setting + bugfixes"
   }
 }

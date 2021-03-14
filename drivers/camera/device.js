@@ -1,7 +1,5 @@
 'use strict';
 
-const Homey = require('homey');
-const { ManagerDrivers } = require('homey');
 const DeviceBase = require('../../lib/devicebase');
 
 class SynoCameraDevice extends DeviceBase {
@@ -13,10 +11,10 @@ class SynoCameraDevice extends DeviceBase {
   async onInit() {
     this.log('init device');
 
-    this.cameraImage = null;
+    this.snapshot = null;
     this.motion_timer = null;
 
-    this.setUnavailable(Homey.__('exception.initializing')).catch(this.error);
+    this.setUnavailable(this.homey.__('exception.initializing')).catch(this.error);
 
     await this.migrate();
 
@@ -25,7 +23,7 @@ class SynoCameraDevice extends DeviceBase {
       await this.initStation(stationId);
     } else {
       this.log('no station set for camera');
-      this.setUnavailable(Homey.__('exception.no_station_found')).catch(this.error);
+      this.setUnavailable(this.homey.__('exception.no_station_found')).catch(this.error);
     }
 
     this.log('init end');
@@ -38,7 +36,7 @@ class SynoCameraDevice extends DeviceBase {
   async migrate() {
     this.log('migrate device');
 
-    const appVersion = Homey.manifest.version;
+    const appVersion = this.homey.manifest.version;
     const deviceVersion = this.getStoreValue('version');
 
     this.log(appVersion);
@@ -86,7 +84,7 @@ class SynoCameraDevice extends DeviceBase {
     let timer = 0;
     const intVal = setInterval(() => {
       timer++;
-      const stationReady = Homey.app.isStationReady(stationId);
+      const stationReady = this.homey.app.isStationReady(stationId);
       if (stationReady === true) {
         this.log('stop timer, station is ready');
         // finish
@@ -95,7 +93,7 @@ class SynoCameraDevice extends DeviceBase {
       } else if (timer > 60) {
         // timeout
         this.log('stop timer, timeout');
-        this.setUnavailable(Homey.__('exception.no_station_found')).catch(this.error);
+        this.setUnavailable(this.homey.__('exception.no_station_found')).catch(this.error);
         clearInterval(intVal);
       }
     }, 1000);
@@ -232,14 +230,6 @@ class SynoCameraDevice extends DeviceBase {
         return true;
       });
 
-      // condition
-      const enabledCondition = new Homey.FlowCardCondition('is_enabled');
-      enabledCondition
-        .register()
-        .registerRunListener(async (args, state) => {
-          return this.getCapabilityValue('enabled'); // Promise<boolean>
-        });
-
       return true;
     } if ((ruleEnabledSuccess === false || ruleDisabledSuccess === false) && this.hasCapability('enabled') === true) {
       this.log('remove capability enabled');
@@ -303,26 +293,10 @@ class SynoCameraDevice extends DeviceBase {
   async setImage() {
     this.log('set image');
 
-    if (this.cameraImage === null) {
-      this.cameraImage = new Homey.Image();
-
+    if (this.snapshot === null) {
+      this.snapshot = await this.homey.images.createImage();
       await this.setImageStream();
-
-      this.log('register camera image');
-      this.cameraImage.register()
-        .then(() => {
-          return this.setCameraImage('front', Homey.__('camera.front.title'), this.cameraImage);
-        })
-        .catch(this.error);
-
-      // update image action
-      const updateImageAction = new Homey.FlowCardAction('update_image');
-      updateImageAction
-        .register()
-        .registerRunListener(async () => {
-          this.cameraImage.update();
-          return Promise.resolve(true);
-        });
+      await this.setCameraImage('front', this.homey.__('camera.front.title'), this.snapshot);
     } else {
       await this.setImageStream();
     }
@@ -335,45 +309,40 @@ class SynoCameraDevice extends DeviceBase {
   async setImageStream() {
     this.log('set stream');
 
-    const data = this.getData();
-    const qs = {
-      api: 'SYNO.SurveillanceStation.Camera',
-      method: 'GetSnapshot',
-      version: 9,
-      id: data.id,
-    };
-
-    this.cameraImage.setStream(async stream => {
+    this.snapshot.setStream(async stream => {
       if (this.getCapabilityValue('enabled') !== true) {
-        throw new Error(Homey.__('exception.camera_disabled'));
+        throw new Error(this.homey.__('exception.camera_disabled'));
       }
+
+      const profiletypeId = this.getProfileType();
+      const data = this.getData();
+      const qs = {
+        api: 'SYNO.SurveillanceStation.Camera',
+        method: 'GetSnapshot',
+        version: 9,
+        id: data.id,
+        profileType: profiletypeId,
+      };
 
       const res = await this.fetchApi('/webapi/entry.cgi', qs);
 
       try {
         res.body.pipe(stream);
       } catch (e) {
-        throw new Error(Homey.__('exception.image_failed'));
+        throw new Error(this.homey.__('exception.image_failed'));
       }
     });
   }
 
-  /**
-   * onSettings, enable/disable motion detection
-   * @param oldSettingsObj
-   * @param newSettingsObj
-   * @param changedKeysArr
-   * @returns {Promise<void>}
-   */
-  async onSettings(oldSettingsObj, newSettingsObj, changedKeysArr) {
+  async onSettings({ oldSettings, newSettings, changedKeys }) {
     this.log('onSettings');
-    this.log(oldSettingsObj);
-    this.log(newSettingsObj);
-    this.log(changedKeysArr);
+    this.log(oldSettings);
+    this.log(newSettings);
+    this.log(changedKeys);
 
-    if (changedKeysArr.includes('motion_timeout')
-    && newSettingsObj.motion_timeout < 10) {
-      throw new Error(Homey.__('exception.motion_timeout_tolow'));
+    if (changedKeys.includes('motion_timeout')
+      && newSettings.motion_timeout < 10) {
+      throw new Error(this.homey.__('exception.motion_timeout_tolow'));
     }
   }
 
@@ -453,8 +422,8 @@ class SynoCameraDevice extends DeviceBase {
     } else {
       this.log('device motion started');
       this.setCapabilityValue('alarm_motion', true);
-      if (this.cameraImage !== null) {
-        this.cameraImage.update().catch(this.error);
+      if (this.snapshot !== null) {
+        this.snapshot.update().catch(this.error);
       }
     }
 
@@ -679,7 +648,7 @@ class SynoCameraDevice extends DeviceBase {
    */
   async onSidFail() {
     this.log('camera sid fail');
-    this.setUnavailable(Homey.__('exception.authentication_failed')).catch(this.error);
+    this.setUnavailable(this.homey.__('exception.authentication_failed')).catch(this.error);
   }
 
   /**
@@ -753,7 +722,7 @@ class SynoCameraDevice extends DeviceBase {
       this.setCapabilityValue('enabled', true).catch(this.error);
     }
 
-    this.getDriver().triggerCameraEnabled(this, { }, { });
+    this.driver.triggerCameraEnabled(this, {}, {});
   }
 
   async onCameraDisabled() {
@@ -767,7 +736,7 @@ class SynoCameraDevice extends DeviceBase {
       this.setCapabilityValue('enabled', false).catch(this.error);
     }
 
-    this.getDriver().triggerCameraDisabled(this, { }, { });
+    this.driver.triggerCameraDisabled(this, {}, {});
   }
 
   async onStationReady() {
@@ -800,7 +769,7 @@ class SynoCameraDevice extends DeviceBase {
     const stationId = this.getStoreValue('station_id');
 
     if (stationId !== undefined && stationId !== null) {
-      const station = ManagerDrivers.getDriver('station').getDevice({ id: `${stationId}` });
+      const station = this.homey.drivers.getDriver('station').getDevice({ id: `${stationId}` });
       if (station !== undefined && station !== null && !(station instanceof Error)) {
         return station;
       }
@@ -818,6 +787,23 @@ class SynoCameraDevice extends DeviceBase {
     if (station !== false) {
       await station.registerCamera(data.id);
     }
+  }
+
+  getProfileType() {
+    this.log('get profile type');
+
+    const profiles = new Map();
+    profiles.set('high', 0);
+    profiles.set('balanced', 1);
+    profiles.set('low', 2);
+
+    const profiletype = this.getSetting('profiletype');
+    const profileTypeId = profiles.get(profiletype);
+
+    if (profileTypeId !== undefined) {
+      return profileTypeId;
+    }
+    return 1;
   }
 
 }

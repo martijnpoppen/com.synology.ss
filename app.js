@@ -1,7 +1,6 @@
 'use strict';
 
 const Homey = require('homey');
-const { ManagerSettings } = require('homey');
 const crypto = require('crypto');
 
 class MyApp extends Homey.App {
@@ -20,7 +19,7 @@ class MyApp extends Homey.App {
    */
   async initPassKey() {
     this.log('init passkey');
-    const passKey = await ManagerSettings.get('passkey');
+    const passKey = await this.homey.settings.get('passkey');
 
     this.log(passKey);
     if (passKey === undefined || passKey === null) {
@@ -35,7 +34,7 @@ class MyApp extends Homey.App {
         Homey.app.log(`The random data is: ${
           newPassKey}`);
 
-        ManagerSettings.set('passkey', `${newPassKey}`);
+        this.homey.settings.set('passkey', `${newPassKey}`);
       });
     }
   }
@@ -48,7 +47,7 @@ class MyApp extends Homey.App {
   async encryptData(data) {
     this.log('encrypt data');
 
-    const userKey = await ManagerSettings.get('passkey');
+    const userKey = await this.homey.settings.get('passkey');
 
     const encryptionKey = crypto.createHash('sha256').update(userKey).digest();
     const initVector = crypto.randomBytes(16);
@@ -67,7 +66,7 @@ class MyApp extends Homey.App {
   async decryptData(data) {
     this.log('decrypt data');
 
-    const userKey = await ManagerSettings.get('passkey');
+    const userKey = await this.homey.settings.get('passkey');
 
     const encryptionKey = crypto.createHash('sha256').update(userKey).digest();
     const initVector = Buffer.from(data.substring(0, 32), 'hex');
