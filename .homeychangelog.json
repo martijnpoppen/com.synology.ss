@@ -47,5 +47,17 @@
   "3.2.0": {
     "en": "SDK3 + Snapshot Quality Setting + bugfixes",
     "nl": "SDK3 + Snapshot Quality Setting + bugfixes"
+  },
+  "3.2.1": {
+    "en": "SDK3 + Snapshot Quality Setting + bugfixes",
+    "nl": "SDK3 + Snapshot Quality Setting + bugfixes"
+  },
+  "3.2.2": {
+    "en": "SDK3 + Snapshot Quality Setting + bugfixes",
+    "nl": "SDK3 + Snapshot Quality Setting + bugfixes"
+  },
+  "3.3.0": {
+    "en": "Create snapshot flow action added",
+    "nl": "Maken van een snapshot flow-actie toegevoegd"
   }
 }

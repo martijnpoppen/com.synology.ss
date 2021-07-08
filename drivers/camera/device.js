@@ -806,6 +806,22 @@ class SynoCameraDevice extends DeviceBase {
     return 1;
   }
 
+  async createSnapshot() {
+    this.log('create snapshot');
+
+    const data = this.getData();
+    const qs = {
+      api: 'SYNO.SurveillanceStation.SnapShot',
+      method: 'TakeSnapshot',
+      camId: data.id,
+      dsId: 0,
+      version: 1,
+      blSave: true,
+    };
+
+    await this.fetchApi('/webapi/entry.cgi', qs);
+  }
+
 }
 
 module.exports = SynoCameraDevice;

@@ -44,7 +44,8 @@
         };
 
         Homey.emit( 'station_save', data).then(function( result ){
-            if(result===true) {
+            console.log('result: ' + result);
+            if(result === true) {
                 Homey.confirm( Homey.__('repair.camera.done'), 'info', function(){
                 Homey.showView('done');
               });

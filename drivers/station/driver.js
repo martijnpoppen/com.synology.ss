@@ -82,7 +82,7 @@ module.exports = class StationDriver extends Homey.Driver {
           protocol: api.protocol,
           host: api.host,
           port: Number(api.port),
-          version: Homey.manifest.version,
+          version: this.homey.manifest.version,
         },
       }];
 
@@ -200,13 +200,13 @@ module.exports = class StationDriver extends Homey.Driver {
 
         let message = '';
         if (error.type !== undefined && error.type === 'aborted') {
-          message = Homey.__('exception.validate_pair_timeout');
+          message = this.homey.__('exception.validate_pair_timeout');
         } else {
           message = error.message;
         }
 
         // result not ok
-        session.emit('station-api-error', message, (err, errData) => {
+        session.emit('station-api-error', message).then(function( result ) {
           this.log(errData);
         });
       });
@@ -216,24 +216,24 @@ module.exports = class StationDriver extends Homey.Driver {
 
       if (response !== undefined && response.data !== undefined
         && response.data.sid !== undefined) {
-        session.emit('station-api-ok', { sid: response.data.sid, did: response.data.did }, (err, errData) => {
-          this.log(errData);
+        session.emit('station-api-ok', { sid: response.data.sid, did: response.data.did }).then(function( result ) {
+          this.log(result);
         });
       } else if (response !== undefined) {
         // result not ok
         if (response.error.code === 403) {
-          session.emit('station-api-2fa', '', (err, errData) => {
-            this.log(errData);
+          session.emit('station-api-2fa', '').then(function( result ) {
+            this.log(result);
           });
         } else {
-          session.emit('station-api-error', this.homey.__('exception.validate_pair_failed'), (err, errData) => {
-            this.log(errData);
+          session.emit('station-api-error', this.homey.__('exception.validate_pair_failed')).then(function( result ) {
+            this.log(result);
           });
         }
       }
     } catch (error) {
-      session.emit('station-api-error', error.message, (err, errData) => {
-        this.log(errData);
+      session.emit('station-api-error', error.message).then(function( result ) {
+        this.log(result);
       });
     } finally {
       clearTimeout(timeout);
@@ -246,13 +246,13 @@ module.exports = class StationDriver extends Homey.Driver {
       account,
       password,
     };
-    const encryptedData = await Homey.app.encryptData(accountData);
+    const encryptedData = await this.homey.app.encryptData(accountData);
     return encryptedData;
   }
 
   async getDecryptedAccount(accountData) {
     this.log('get decrypted account');
-    const decryptedData = await Homey.app.decryptData(accountData);
+    const decryptedData = await this.homey.app.decryptData(accountData);
     return decryptedData;
   }
 

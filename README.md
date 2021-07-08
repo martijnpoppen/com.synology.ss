@@ -10,6 +10,7 @@ Adds support to Homey for Camera's available in Synology Surveillance Station.
 * Motion Detection
 * Enable/disable
 * Recording start/stop
+* Create snapshot
 
 ### Surveillance Station
 

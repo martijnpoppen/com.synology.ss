@@ -34,6 +34,11 @@ module.exports = class CameraDriver extends Homey.Driver {
       return true;
     });
 
+    this.homey.flow.getActionCard('create_snapshot').registerRunListener(async args => {
+      await args.camera.createSnapshot().catch(this.error);
+      return true;
+    });
+
     this.homey.flow.getConditionCard('is_enabled').registerRunListener(async (args, state) => {
       return args.camera.getCapabilityValue('enabled');
     });
@@ -109,7 +114,7 @@ module.exports = class CameraDriver extends Homey.Driver {
             },
             store: {
               station_id: stationId,
-              version: Homey.manifest.version,
+              version: this.homey.manifest.version,
             },
           };
           devices.push(camera);
@@ -134,7 +139,6 @@ module.exports = class CameraDriver extends Homey.Driver {
       const stations = [];
 
       const devices = this.homey.drivers.getDriver('station').getDevices();
-      this.log(devices);
 
       Object.keys(devices).forEach(i => {
         const driverDevice = devices[i];
@@ -145,23 +149,23 @@ module.exports = class CameraDriver extends Homey.Driver {
         stations.push(station);
       });
 
-      this.log(stations);
       return stations;
     });
 
     session.setHandler('station_save', async data => {
-      device.setStoreValue('station_id', `${data.station}`)
+      let success = false;
+      await device.setStoreValue('station_id', `${data.station}`)
         .then(async () => {
-          const success = await device.validatePair();
-
+          success = await device.validatePair();
           if (success === true) {
             device.setAvailable();
           } else {
             device.setUnavailable('authentication failed');
           }
-          return success;
         })
         .catch(this.error);
+
+      return success;
     });
   }
 

@@ -25,13 +25,13 @@ class MyApp extends Homey.App {
     if (passKey === undefined || passKey === null) {
       crypto.randomBytes(64, (err, buf) => {
         if (err) {
-          Homey.app.log(err);
+          this.log(err);
           return;
         }
 
         const newPassKey = buf.toString('hex');
 
-        Homey.app.log(`The random data is: ${
+        this.log(`The random data is: ${
           newPassKey}`);
 
         this.homey.settings.set('passkey', `${newPassKey}`);

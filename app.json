@@ -1,6 +1,6 @@
 {
   "id": "com.synology.ss",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "name": {
@@ -468,6 +468,20 @@
         "title": {
           "en": "Disable",
           "nl": "Uitschakelen"
+        },
+        "args": [
+          {
+            "name": "camera",
+            "type": "device",
+            "filter": "driver_id=camera"
+          }
+        ]
+      },
+      {
+        "id": "create_snapshot",
+        "title": {
+          "en": "Create Snapshot",
+          "nl": "Maak een snapshot"
         },
         "args": [
           {
