@@ -59,5 +59,9 @@
   "3.3.0": {
     "en": "Create snapshot flow action added",
     "nl": "Maken van een snapshot flow-actie toegevoegd"
+  },
+  "3.4.0": {
+    "en": "Create camera connection lost/normal triggers",
+    "nl": "Triggers voor connectie verbroken/hersteld toegevoegd"
   }
 }

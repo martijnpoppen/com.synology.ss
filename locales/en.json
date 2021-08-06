@@ -2,6 +2,10 @@
   "camera": {
     "front": {
       "title": "Snapshot"
+    },
+    "ptz": {
+      "supported": "Supported",
+      "unsupported": "Not Supported"
     }
   },
   "pair": {
@@ -63,6 +67,8 @@
     "camera_disabled": "The camera is disabled",
     "validate_pair_timeout": "Timeout, please make sure the settings are correct",
     "validate_pair_failed": "Failed to connect, please make sure the settings are correct",
-    "no_station_found": "No Surveillance Station found, please click on repair and connect to your station."
+    "no_station_found": "No Surveillance Station found, please click on repair and connect to your station.",
+    "action_unsupported": "Action not supported for this device",
+    "action_failed": "Action failed"
   }
 }

@@ -2,6 +2,10 @@
   "camera": {
     "front": {
       "title": "Snapshot"
+    },
+    "ptz": {
+      "supported": "Ondersteund",
+      "unsupported": "Niet ondersteund"
     }
   },
   "pair": {
@@ -63,6 +67,8 @@
     "camera_disabled": "De camera is uitgeschakeld",
     "validate_pair_timeout": "Timeout, controleer de instellingen en probeer het opnieuw",
     "validate_pair_failed": "Inloggen niet gelukt, controleer de instellingen en probeer het opnieuw",
-    "no_station_found": "Geen Surveillance Station gevonden, klik op repareren en selecteer je Surveillance Station"
+    "no_station_found": "Geen Surveillance Station gevonden, klik op repareren en selecteer je Surveillance Station",
+    "action_unsupported": "Deze actie wordt niet ondersteund door dit apparaat.",
+    "action_failed": "Actie gefaald"
   }
 }

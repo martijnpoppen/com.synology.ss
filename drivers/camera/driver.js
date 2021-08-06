@@ -8,6 +8,18 @@ module.exports = class CameraDriver extends Homey.Driver {
   async onInit() {
     this._flowTriggerCameraEnabled = this.homey.flow.getDeviceTriggerCard('camera_enabled');
     this._flowTriggerCameraDisabled = this.homey.flow.getDeviceTriggerCard('camera_disabled');
+    this._flowTriggerCameraConnectionLost = this.homey.flow.getDeviceTriggerCard('camera_connection_lost');
+    this._flowTriggerCameraConnectionNormal = this.homey.flow.getDeviceTriggerCard('camera_connection_normal');
+
+    this.homey.flow.getConditionCard('is_enabled').registerRunListener(async (args, state) => {
+      const response = await args.camera.getCapabilityValue('enabled');
+      return response;
+    });
+
+    this.homey.flow.getConditionCard('is_connected').registerRunListener(async (args, state) => {
+      const response = await args.camera.isConnected();
+      return response;
+    });
 
     this.homey.flow.getActionCard('ext_record_start').registerRunListener(async args => {
       await args.camera.externalRecordStart().catch(this.error);
@@ -39,8 +51,37 @@ module.exports = class CameraDriver extends Homey.Driver {
       return true;
     });
 
-    this.homey.flow.getConditionCard('is_enabled').registerRunListener(async (args, state) => {
-      return args.camera.getCapabilityValue('enabled');
+    this.homey.flow.getActionCard('ptz_home').registerRunListener(async args => {
+      const result = await args.camera.ptzHome().catch(error => {throw new Error(error)});
+      if(result===false) {
+        throw new Error(this.homey.__('exception.action_failed'));
+      }
+      return true;
+    });
+
+    this.homey.flow.getActionCard('ptz_autofocus').registerRunListener(async args => {
+      const result = await args.camera.ptzAutoFocus().catch(error => {throw new Error(error)});
+      if(result===false) {
+        throw new Error(this.homey.__('exception.action_failed'));
+      }
+      return true;
+    });
+
+    this.homey.flow.getActionCard('ptz_autopan').registerRunListener(async args => {
+      const start = args.start === "start" ? true:false;
+      const result = await args.camera.ptzAutoPan(start).catch(error => {throw new Error(error)});
+      if(result===false) {
+        throw new Error(this.homey.__('exception.action_failed'));
+      }
+      return true;
+    });
+
+    this.homey.flow.getActionCard('ptz_setposition').registerRunListener(async args => {
+      const result = await args.camera.ptzSetPosition(args.pos_x,args.pos_y).catch(error => {throw new Error(error)});
+      if(result===false) {
+        throw new Error(this.homey.__('exception.action_failed'));
+      }
+      return true;
     });
   }
 
@@ -178,6 +219,20 @@ module.exports = class CameraDriver extends Homey.Driver {
 
   triggerCameraDisabled(device, tokens, state) {
     this._flowTriggerCameraDisabled
+      .trigger(device, tokens, state)
+      .then(this.log)
+      .catch(this.error);
+  }
+
+  triggerCameraConnectionLost(device, tokens, state) {
+    this._flowTriggerCameraConnectionLost
+      .trigger(device, tokens, state)
+      .then(this.log)
+      .catch(this.error);
+  }
+
+  triggerCameraConnectionNormal(device, tokens, state) {
+    this._flowTriggerCameraConnectionNormal
       .trigger(device, tokens, state)
       .then(this.log)
       .catch(this.error);

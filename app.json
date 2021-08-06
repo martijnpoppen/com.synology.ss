@@ -1,6 +1,6 @@
 {
   "id": "com.synology.ss",
-  "version": "3.3.0",
+  "version": "3.4.0",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "name": {
@@ -72,6 +72,27 @@
         "en": "Disabled",
         "nl": "Uitgeschakeld"
       }
+    },
+    "ptz_txt": {
+      "type": "string",
+      "title": {
+        "nl": "PTZ",
+        "en": "PTZ"
+      },
+      "icon": "/drivers/camera/assets/svg/ptz.svg",
+      "getable": true,
+      "setable": false
+    },
+    "ptz_bln": {
+      "type": "boolean",
+      "title": {
+        "nl": "PTZ",
+        "en": "PTZ"
+      },
+      "icon": "/drivers/camera/assets/svg/ptz.svg",
+      "getable": false,
+      "setable": false,
+      "uiComponent": null
     }
   },
   "api": {
@@ -99,6 +120,16 @@
       "method": "get",
       "path": "/homemode_off/:id",
       "public": true
+    },
+    "onCameraConnectionLost": {
+      "method": "get",
+      "path": "/connection_lost/:id",
+      "public": true
+    },
+    "onCameraConnectionNormal": {
+      "method": "get",
+      "path": "/connection_normal/:id",
+      "public": true
     }
   },
   "drivers": [
@@ -114,7 +145,9 @@
       },
       "capabilities": [
         "enabled",
-        "button.repair_action_rules"
+        "button.repair_action_rules",
+        "ptz_bln",
+        "ptz_txt"
       ],
       "capabilitiesOptions": {
         "button.repair_action_rules": {
@@ -359,6 +392,34 @@
             "filter": "driver_id=camera"
           }
         ]
+      },
+      {
+        "id": "camera_connection_lost",
+        "title": {
+          "en": "Connection lost",
+          "nl": "Connectie verbroken"
+        },
+        "args": [
+          {
+            "name": "camera",
+            "type": "device",
+            "filter": "driver_id=camera"
+          }
+        ]
+      },
+      {
+        "id": "camera_connection_normal",
+        "title": {
+          "en": "Connection normal",
+          "nl": "Connectie hersteld"
+        },
+        "args": [
+          {
+            "name": "camera",
+            "type": "device",
+            "filter": "driver_id=camera"
+          }
+        ]
       }
     ],
     "conditions": [
@@ -367,6 +428,20 @@
         "title": {
           "en": "!{{Enabled|Disabled}}",
           "nl": "!{{Ingeschakeld|Uitgeschakeld}}"
+        },
+        "args": [
+          {
+            "name": "camera",
+            "type": "device",
+            "filter": "driver_id=camera"
+          }
+        ]
+      },
+      {
+        "id": "is_connected",
+        "title": {
+          "en": "!{{Connected|Disconnected}}",
+          "nl": "!{{Verbonden|Verbinding verbroken}}"
         },
         "args": [
           {
@@ -488,6 +563,124 @@
             "name": "camera",
             "type": "device",
             "filter": "driver_id=camera"
+          }
+        ]
+      },
+      {
+        "id": "ptz_home",
+        "title": {
+          "en": "PTZ Home",
+          "nl": "PTZ Home"
+        },
+        "args": [
+          {
+            "name": "camera",
+            "type": "device",
+            "filter": "driver_id=camera"
+          }
+        ]
+      },
+      {
+        "id": "ptz_gopreset",
+        "title": {
+          "en": "PTZ Go Preset",
+          "nl": "PTZ Go Preset"
+        },
+        "args": [
+          {
+            "name": "camera",
+            "type": "device",
+            "filter": "driver_id=camera"
+          }
+        ]
+      },
+      {
+        "id": "ptz_runpatrol",
+        "title": {
+          "en": "PTZ Run Patrol",
+          "nl": "PTZ Run Patrol"
+        },
+        "args": [
+          {
+            "name": "camera",
+            "type": "device",
+            "filter": "driver_id=camera"
+          }
+        ]
+      },
+      {
+        "id": "ptz_autofocus",
+        "title": {
+          "en": "PTZ AutoFocus",
+          "nl": "PTZ Autofocus"
+        },
+        "args": [
+          {
+            "name": "camera",
+            "type": "device",
+            "filter": "driver_id=camera"
+          }
+        ]
+      },
+      {
+        "id": "ptz_setposition",
+        "title": {
+          "en": "PTZ Set Position",
+          "nl": "PTZ Set Position"
+        },
+        "args": [
+          {
+            "name": "camera",
+            "type": "device",
+            "filter": "driver_id=camera"
+          },
+          {
+            "type": "range",
+            "name": "pos_x",
+            "title": { 
+              "en": "Horizontal",
+              "nl": "Horizontaal" 
+            },
+            "min": 0,
+            "max": 640,
+            "step": 1
+          },
+          {
+            "type": "range",
+            "name": "pos_y",
+            "title": { 
+              "en": "Vertical",
+              "nl": "Verticaal"
+            },
+            "min": 0,
+            "max": 480,
+            "step": 1
+          }
+        ]
+      },
+      {
+        "id": "ptz_autopan",
+        "title": {
+          "en": "PTZ AutoPan",
+          "nl": "PTZ AutoPan"
+        },
+        "args": [
+          {
+            "name": "camera",
+            "type": "device",
+            "filter": "driver_id=camera"
+          },
+          {
+            "type": "dropdown",
+            "name": "start",
+            "title": { 
+              "en": "Start/Stop",
+              "nl": "Start/Stop"
+            },
+            "values": [
+              { "id": "start", "label": "Start" },
+              { "id": "stop", "label": "Stop" }
+            ]
           }
         ]
       }

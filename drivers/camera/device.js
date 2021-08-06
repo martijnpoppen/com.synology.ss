@@ -44,7 +44,7 @@ class SynoCameraDevice extends DeviceBase {
 
     if (appVersion === deviceVersion) {
       // same version, no migration
-      return true;
+      //return true;
     }
 
     // switch class to sensor
@@ -69,6 +69,14 @@ class SynoCameraDevice extends DeviceBase {
     // add capability
     if (this.hasCapability('button.repair_action_rules') === false) {
       await this.addCapability('button.repair_action_rules');
+    }
+
+    if (this.hasCapability('ptz_bln') === false) {
+      await this.addCapability('ptz_bln');
+    }
+
+    if (this.hasCapability('ptz_txt') === false) {
+      await this.addCapability('ptz_txt');
     }
 
     // set version
@@ -108,6 +116,16 @@ class SynoCameraDevice extends DeviceBase {
     const successMotionAlarm = await this.setCapabilityMotionAlarm();
     if (successMotionAlarm === false) {
       throw new Error('Could not set motion detection rule');
+    }
+
+    const successConnectionLost = await this.syncConnectionLostRule();
+    if (successConnectionLost === false) {
+      throw new Error('Could not set connection lost rule');
+    }
+
+    const successConnectionNormal = await this.syncConnectionNormalRule();
+    if (successConnectionNormal === false) {
+      throw new Error('Could not set connection normal rule');
     }
   }
 
@@ -254,10 +272,10 @@ class SynoCameraDevice extends DeviceBase {
     this.log('on deleted');
 
     this.deleteMotionDetectionRule().catch(this.error);
-
     this.deleteEnabledRule().catch(this.error);
-
     this.deleteDisabledRule().catch(this.error);
+    this.deleteConnectionLostRule().catch(this.error);
+    this.deleteConnectionNormalRule().catch(this.error);
   }
 
   async setCurrentState() {
@@ -274,15 +292,27 @@ class SynoCameraDevice extends DeviceBase {
 
     const res = await this.fetchApi('/webapi/entry.cgi', qs);
 
-    if (res === undefined || res.data === undefined || res.data.cameras === undefined
+    if (res === undefined || res.data === undefined || res.data.cameras === undefined || res.data.cameras.length === 0
       || typeof res.data.cameras[0].enabled !== 'boolean') {
       throw new Error('no current state found or wrong data returned from Synology');
     }
 
-    this.log(`set enabled to ${res.data.cameras[0].enabled.toString()}`);
+    const camera = res.data.cameras[0];
+    this.log(`set enabled to ${camera.enabled.toString()}`);
 
-    // set capability
-    this.setCapabilityValue('enabled', res.data.cameras[0].enabled)
+    // set capability enabled
+    this.setCapabilityValue('enabled', camera.enabled)
+      .catch(this.error);
+
+    // set capability ptz
+    const ptz = camera.deviceType & 4;
+    const ptzBln = (ptz === 4) ? true:false;
+    const ptzTxt = (ptzBln === true) ? this.homey.__('camera.ptz.supported'):this.homey.__('camera.ptz.unsupported');
+
+    this.setCapabilityValue('ptz_bln', ptzBln)
+      .catch(this.error);
+
+    this.setCapabilityValue('ptz_txt', ptzTxt)
       .catch(this.error);
   }
 
@@ -344,6 +374,55 @@ class SynoCameraDevice extends DeviceBase {
       && newSettings.motion_timeout < 10) {
       throw new Error(this.homey.__('exception.motion_timeout_tolow'));
     }
+  }
+
+  async syncConnectionLostRule() {
+    this.log('sync connection lost rule');
+
+    const ruleId = this.getStoreValue('rule_connection_lost');
+    let success;
+    let rule;
+
+    // no rule yet
+    if (ruleId !== undefined && Number.isInteger(ruleId) === true) {
+      rule = await this.getActionRule(ruleId);
+    }
+
+    if(rule === null || rule === false) {
+      // add action rule
+      success = await this.createConnectionLostRule();
+    }
+
+    if (success !== true) {
+      success=false;
+    }
+
+    return success;
+  }
+
+  async syncConnectionNormalRule() {
+    this.log('sync connection normal rule');
+
+    const ruleId = this.getStoreValue('rule_connection_normal');
+    let success;
+    let rule;
+    
+
+    // no rule yet
+    if (ruleId !== undefined && Number.isInteger(ruleId) === true) {
+      rule = await this.getActionRule(ruleId);
+    }
+
+    if(rule === null || rule === false) {
+      // add action rule
+      success = await this.createConnectionNormalRule();
+    }
+
+    if (success !== true) {
+      success=false;
+    }
+
+    return success;
   }
 
   /**
@@ -548,6 +627,76 @@ class SynoCameraDevice extends DeviceBase {
     return false;
   }
 
+  async createConnectionLostRule() {
+    this.log('create connection lost rule');
+
+    // create rule
+    const homeyAddress = await this.getHomeyAddress();
+    const data = this.getData();
+    const webhookUrl = `${homeyAddress}/api/app/com.synology.ss/connection_lost/${data.id}`;
+
+    const qs = {
+      api: 'SYNO.SurveillanceStation.ActionRule',
+      method: 'Save',
+      version: 3,
+      name: `"Homey Connection lost rule for ${this.getName()}"`,
+      multiRuleId: -1,
+      ruleType: 0,
+      actType: 0,
+      multiEvtSetting: 0,
+      evtMinIntvl: 10,
+      events: `[{"evtSrc":0,"evtDsId":0,"evtDevId":${data.id},"evtId":3,"evtItem":-1,"evtTrig":0,"evtWebhookToken":""}]`,
+      actions: `[{"id":-1,"actSrc":1,"actDsId":0,"actDevId":-1,"actId":-1,"actItemId":-1,"actTimes":1,"actTimeUnit":1,"actTimeDur":10,"actRetPos":-2,"extUrl":"${webhookUrl}","userName":"","password":"","iftttKey":"","iftttEvent":"","param1":"","param2":"","param3":"","webhookReqMethod":0,"httpContentType":0,"httpBody":""}]`,
+      actSchedule: '"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"',
+    };
+
+    await this.fetchApi('/webapi/entry.cgi', qs);
+
+    const ruleConnectionLost = await this.getActionRuleIdByUrl(webhookUrl);
+
+    if (ruleConnectionLost > 0) {
+      this.setStoreValue('rule_connection_lost', ruleConnectionLost).catch(this.error);
+      return true;
+    }
+
+    return false;
+  }
+
+  async createConnectionNormalRule() {
+    this.log('create connection normal rule');
+
+    // create rule
+    const homeyAddress = await this.getHomeyAddress();
+    const data = this.getData();
+    const webhookUrl = `${homeyAddress}/api/app/com.synology.ss/connection_normal/${data.id}`;
+
+    const qs = {
+      api: 'SYNO.SurveillanceStation.ActionRule',
+      method: 'Save',
+      version: 3,
+      name: `"Homey Connection normal rule for ${this.getName()}"`,
+      multiRuleId: -1,
+      ruleType: 0,
+      actType: 0,
+      multiEvtSetting: 0,
+      evtMinIntvl: 10,
+      events: `[{"evtSrc":0,"evtDsId":0,"evtDevId":${data.id},"evtId":4,"evtItem":-1,"evtTrig":0,"evtWebhookToken":""}]`,
+      actions: `[{"id":-1,"actSrc":1,"actDsId":0,"actDevId":-1,"actId":-1,"actItemId":-1,"actTimes":1,"actTimeUnit":1,"actTimeDur":10,"actRetPos":-2,"extUrl":"${webhookUrl}","userName":"","password":"","iftttKey":"","iftttEvent":"","param1":"","param2":"","param3":"","webhookReqMethod":0,"httpContentType":0,"httpBody":""}]`,
+      actSchedule: '"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"',
+    };
+
+    await this.fetchApi('/webapi/entry.cgi', qs);
+
+    const ruleConnectionNormal = await this.getActionRuleIdByUrl(webhookUrl);
+
+    if (ruleConnectionNormal > 0) {
+      this.setStoreValue('rule_connection_normal', ruleConnectionNormal).catch(this.error);
+      return true;
+    }
+
+    return false;
+  }
+
   /**
    * delete enabled rule
    * @returns {Promise<void>}
@@ -594,6 +743,38 @@ class SynoCameraDevice extends DeviceBase {
     }
 
     await this.deleteActionRule(ruleMotion);
+  }
+
+  /**
+   * delete connection lost rule
+   * @returns {Promise<void>}
+   */
+  async deleteConnectionLostRule() {
+    this.log('delete connection lost rule');
+
+    const rule = this.getStoreValue('rule_connection_lost');
+
+    if (rule === undefined || Number.isInteger(rule) === false) {
+      return;
+    }
+
+    await this.deleteActionRule(rule);
+  }
+
+  /**
+   * delete connection normal rule
+   * @returns {Promise<void>}
+   */
+  async deleteConnectionNormalRule() {
+    this.log('delete connection normal rule');
+
+    const rule = this.getStoreValue('rule_connection_normal');
+
+    if (rule === undefined || Number.isInteger(rule) === false) {
+      return;
+    }
+
+    await this.deleteActionRule(rule);
   }
 
   /**
@@ -739,10 +920,25 @@ class SynoCameraDevice extends DeviceBase {
     this.driver.triggerCameraDisabled(this, {}, {});
   }
 
+  async onCameraConnectionLost() {
+    this.log('on camera connection lost');
+
+    this.driver.triggerCameraConnectionLost(this, {}, {});
+  }
+
+  async onCameraConnectionNormal() {
+    this.log('on camera connection normal');
+
+    this.driver.triggerCameraConnectionNormal(this, {}, {});
+  }
+
   async onStationReady() {
     this.log('on station ready');
 
     await this.registerCameraForStation();
+
+    await this.syncConnectionLostRule();
+    await this.syncConnectionNormalRule();
 
     await this.initCapabilityMotionAlarm();
     await this.initCapabilityEnabled();
@@ -820,6 +1016,112 @@ class SynoCameraDevice extends DeviceBase {
     };
 
     await this.fetchApi('/webapi/entry.cgi', qs);
+  }
+
+  /**
+   * checks if the camera is connected to the synology
+   * @returns boolean
+   */
+  async isConnected() {
+    this.log('is connected');
+
+    const data = this.getData();
+    const qs = {
+      api: 'SYNO.SurveillanceStation.Camera',
+      method: 'List',
+      idList: data.id,
+      basic: true,
+      version: 9,
+    };
+
+    const disconStatus = [3,15];
+    const response = await this.fetchApi('/webapi/entry.cgi', qs);
+    if(response.data.cameras.length === 0 || (response.data.cameras.length > 0 && disconStatus.includes(response.data.cameras[0].status))) {
+      return false;
+    }
+
+    return true;
+  }
+
+  async ptzHome() {
+    this.log('ptz home');
+
+    if(this.getCapabilityValue('ptz_bln') !== true) {
+      throw new Error(this.homey.__('exception.action_unsupported'));
+    }
+
+    const data = this.getData();
+    const qs = {
+      api: 'SYNO.SurveillanceStation.PTZ',
+      method: 'Home',
+      cameraId: data.id,
+      version: 5,
+    };
+
+    const response = await this.fetchApi('/webapi/entry.cgi', qs);
+    return response.success;
+  }
+
+  async ptzAutoFocus() {
+    this.log('ptz autofocus');
+
+    if(this.getCapabilityValue('ptz_bln') !== true) {
+      throw new Error(this.homey.__('exception.action_unsupported'));
+    }
+
+    const data = this.getData();
+    const qs = {
+      api: 'SYNO.SurveillanceStation.PTZ',
+      method: 'AutoFocus',
+      cameraId: data.id,
+      version: 3,
+    };
+
+    const response = await this.fetchApi('/webapi/entry.cgi', qs);
+    return response.success;
+  }
+
+  async ptzAutoPan(start) {
+    this.log('ptz autopan');
+
+    if(this.getCapabilityValue('ptz_bln') !== true) {
+      throw new Error(this.homey.__('exception.action_unsupported'));
+    }
+    
+    const moveType = start===true ? "Step":"Stop";
+
+    const data = this.getData();
+    const qs = {
+      api: 'SYNO.SurveillanceStation.PTZ',
+      method: 'AutoPan',
+      cameraId: data.id,
+      moveType: moveType,
+      version: 3,
+    };
+
+    const response = await this.fetchApi('/webapi/entry.cgi', qs);
+    return response.success;
+  }
+
+  async ptzSetPosition(posX,posY) {
+    this.log('ptz set position');
+
+    if(this.getCapabilityValue('ptz_bln') !== true) {
+      throw new Error(this.homey.__('exception.action_unsupported'));
+    }
+
+    const data = this.getData();
+    const qs = {
+      api: 'SYNO.SurveillanceStation.PTZ',
+      method: 'AbsPtz',
+      cameraId: data.id,
+      posX: posX,
+      posY: posY,
+      version: 3,
+    };
+
+    const response = await this.fetchApi('/webapi/entry.cgi', qs);
+    return response.success;
   }
 
 }
