@@ -1,0 +1,25 @@
+{
+  "title": {
+    "en": "Run Patrol",
+    "nl": "Run Patrol"
+  },
+  "titleFormatted": { 
+    "en": "Run Patrol [[patrol]]",
+    "nl": "Run Patrol [[patrol]]" 
+  },
+  "args": [
+    {
+      "type": "autocomplete",
+      "name": "patrol",
+      "placeholder": {
+        "en": "Default",
+        "nl": "Standaard"
+      }
+    },
+    {
+      "type": "device",
+      "name": "device",
+      "filter": "driver_id=ptz-camera"
+    }
+  ]
+}

@@ -44,7 +44,7 @@ class SynoCameraDevice extends DeviceBase {
 
     if (appVersion === deviceVersion) {
       // same version, no migration
-      //return true;
+      return true;
     }
 
     // switch class to sensor
@@ -69,14 +69,6 @@ class SynoCameraDevice extends DeviceBase {
     // add capability
     if (this.hasCapability('button.repair_action_rules') === false) {
       await this.addCapability('button.repair_action_rules');
-    }
-
-    if (this.hasCapability('ptz_bln') === false) {
-      await this.addCapability('ptz_bln');
-    }
-
-    if (this.hasCapability('ptz_txt') === false) {
-      await this.addCapability('ptz_txt');
     }
 
     // set version
@@ -302,17 +294,6 @@ class SynoCameraDevice extends DeviceBase {
 
     // set capability enabled
     this.setCapabilityValue('enabled', camera.enabled)
-      .catch(this.error);
-
-    // set capability ptz
-    const ptz = camera.deviceType & 4;
-    const ptzBln = (ptz === 4) ? true:false;
-    const ptzTxt = (ptzBln === true) ? this.homey.__('camera.ptz.supported'):this.homey.__('camera.ptz.unsupported');
-
-    this.setCapabilityValue('ptz_bln', ptzBln)
-      .catch(this.error);
-
-    this.setCapabilityValue('ptz_txt', ptzTxt)
       .catch(this.error);
   }
 
@@ -1041,87 +1022,6 @@ class SynoCameraDevice extends DeviceBase {
     }
 
     return true;
-  }
-
-  async ptzHome() {
-    this.log('ptz home');
-
-    if(this.getCapabilityValue('ptz_bln') !== true) {
-      throw new Error(this.homey.__('exception.action_unsupported'));
-    }
-
-    const data = this.getData();
-    const qs = {
-      api: 'SYNO.SurveillanceStation.PTZ',
-      method: 'Home',
-      cameraId: data.id,
-      version: 5,
-    };
-
-    const response = await this.fetchApi('/webapi/entry.cgi', qs);
-    return response.success;
-  }
-
-  async ptzAutoFocus() {
-    this.log('ptz autofocus');
-
-    if(this.getCapabilityValue('ptz_bln') !== true) {
-      throw new Error(this.homey.__('exception.action_unsupported'));
-    }
-
-    const data = this.getData();
-    const qs = {
-      api: 'SYNO.SurveillanceStation.PTZ',
-      method: 'AutoFocus',
-      cameraId: data.id,
-      version: 3,
-    };
-
-    const response = await this.fetchApi('/webapi/entry.cgi', qs);
-    return response.success;
-  }
-
-  async ptzAutoPan(start) {
-    this.log('ptz autopan');
-
-    if(this.getCapabilityValue('ptz_bln') !== true) {
-      throw new Error(this.homey.__('exception.action_unsupported'));
-    }
-    
-    const moveType = start===true ? "Step":"Stop";
-
-    const data = this.getData();
-    const qs = {
-      api: 'SYNO.SurveillanceStation.PTZ',
-      method: 'AutoPan',
-      cameraId: data.id,
-      moveType: moveType,
-      version: 3,
-    };
-
-    const response = await this.fetchApi('/webapi/entry.cgi', qs);
-    return response.success;
-  }
-
-  async ptzSetPosition(posX,posY) {
-    this.log('ptz set position');
-
-    if(this.getCapabilityValue('ptz_bln') !== true) {
-      throw new Error(this.homey.__('exception.action_unsupported'));
-    }
-
-    const data = this.getData();
-    const qs = {
-      api: 'SYNO.SurveillanceStation.PTZ',
-      method: 'AbsPtz',
-      cameraId: data.id,
-      posX: posX,
-      posY: posY,
-      version: 3,
-    };
-
-    const response = await this.fetchApi('/webapi/entry.cgi', qs);
-    return response.success;
   }
 
 }

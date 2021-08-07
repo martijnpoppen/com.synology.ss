@@ -1,0 +1,136 @@
+{
+  "name": {
+    "en": "Camera"
+  },
+  "class": "sensor",
+  "images": {
+    "large": "/drivers/camera/assets/images/large.png",
+    "small": "/drivers/camera/assets/images/small.png"
+  },
+  "capabilities": [
+    "enabled",
+    "button.repair_action_rules"
+  ],
+  "capabilitiesOptions": {
+    "button.repair_action_rules": {
+      "maintenanceAction": true,
+      "title": {
+        "en": "Repair Action Rules",
+        "nl": "Repareer Actieregels"
+      },
+      "desc": {
+        "en": "Use this if you are missing some (or all) action rules on your Synology Surveillance Station. This action will check and install the necessary action rules.",
+        "nl": "Gebruik deze actie als je een aantal (of alle) actieregels mist op je Synology Surveillance Station. Deze actie installeert de noodzakelijke actieregels."
+      }
+    }
+  },
+  "settings": [
+    {
+      "type": "group",
+      "label": {
+        "en": "Motion Detection"
+      },
+      "children": [
+        {
+          "id": "motion_timeout",
+          "type": "number",
+          "label": {
+            "en": "Timeout",
+            "nl": "Time-out"
+          },
+          "units": {
+            "en": "Seconds",
+            "nl": "Seconde"
+          },
+          "hint": {
+            "en": "Timeout should be at least 10 seconds. To little could mean the camera could trigger to much motion events.",
+            "nl": "Time-out moet minimaal 10 seconde zijn. Een te lage instelling kan er voor zorgen dat de camera te veel beweging detecteert."
+          },
+          "value": 21
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "label": {
+        "en": "Snapshot"
+      },
+      "children": [
+        {
+          "id": "profiletype",
+          "type": "dropdown",
+          "label": {
+            "en": "Profile",
+            "nl": "Profiel"
+          },
+          "hint": {
+            "en": "Setup your stream profiles in your Synology: https://www.synology.com/en-us/knowledgebase/Surveillance/help/SurveillanceStation/camera_settings_video",
+            "nl": "De instellingen van de profielen kun je aanpassen in je Synology: https://www.synology.com/nl-nl/knowledgebase/Surveillance/help/SurveillanceStation/camera_settings_video"
+          },
+          "value": "balanced",
+          "values": [
+            {
+              "id": "high",
+              "label": {
+                "en": "High quality",
+                "nl": "Hoge kwaliteit"
+              }
+            },
+            {
+              "id": "balanced",
+              "label": {
+                "en": "Balanced",
+                "nl": "Gebalanceerd"
+              }
+            },
+            {
+              "id": "low",
+              "label": {
+                "en": "Low bandwidth",
+                "nl": "Lage bandbreedte"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "pair": [
+    {
+      "id": "station"
+    },
+    {
+      "id": "nostation"
+    },
+    {
+      "id": "done",
+      "template": "done"
+    },
+    {
+      "id": "list_devices",
+      "template": "list_devices",
+      "navigation": {
+        "next": "add_devices"
+      },
+      "options": {
+        "singular": true
+      }
+    },
+    {
+      "id": "add_devices",
+      "template": "add_devices"
+    }
+  ],
+  "repair": [
+    {
+      "id": "station"
+    },
+    {
+      "id": "nostation"
+    },
+    {
+      "id": "done",
+      "template": "done"
+    }
+  ]
+}

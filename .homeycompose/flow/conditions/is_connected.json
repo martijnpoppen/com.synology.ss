@@ -1,0 +1,13 @@
+{
+    "title": {
+      "en": "!{{Connected|Disconnected}}",
+      "nl": "!{{Verbonden|Verbinding verbroken}}"
+    },
+    "args": [
+      {
+        "type": "device",
+        "name": "device",
+        "filter": "driver_id=camera|ptz-camera"
+      }
+    ]
+  }

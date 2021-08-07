@@ -1,0 +1,13 @@
+{
+    "title": {
+      "en": "Stop Recording",
+      "nl": "Stop Opname"
+    },
+    "args": [
+      {
+        "type": "device",
+        "name": "device",
+        "filter": "driver_id=camera|ptz-camera"
+      }
+    ]
+  }

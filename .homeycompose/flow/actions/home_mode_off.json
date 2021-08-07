@@ -1,0 +1,13 @@
+{
+    "title": {
+      "en": "Home Mode Disabled",
+      "nl": "Home Mode Uitgeschakeld"
+    },
+    "args": [
+      {
+        "type": "device",
+        "name": "device",
+        "filter": "driver_id=station"
+      }
+    ]
+  }

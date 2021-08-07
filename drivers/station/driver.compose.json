@@ -1,0 +1,62 @@
+{
+  "name": {
+    "en": "Surveillance Station"
+  },
+  "class": "other",
+  "images": {
+    "large": "/drivers/station/assets/images/large.png",
+    "small": "/drivers/station/assets/images/small.png"
+  },
+  "capabilities": [
+    "home_mode",
+    "button.repair_action_rules"
+  ],
+  "capabilitiesOptions": {
+    "button.repair_action_rules": {
+      "maintenanceAction": true,
+      "title": {
+        "en": "Repair Action Rules",
+        "nl": "Repareer Actieregels"
+      },
+      "desc": {
+        "en": "Use this if you are missing some (or all) action rules on your Synology Surveillance Station. This action will check and install the necessary action rules.",
+        "nl": "Gebruik deze actie als je een aantal (of alle) actieregels mist op je Synology Surveillance Station. Deze actie installeert de noodzakelijke actieregels."
+      }
+    }
+  },
+  "settings": [],
+  "pair": [
+    {
+      "id": "api"
+    },
+    {
+      "id": "2fa"
+    },
+    {
+      "id": "list_devices",
+      "template": "list_devices",
+      "navigation": {
+        "next": "add_devices"
+      },
+      "options": {
+        "singular": true
+      }
+    },
+    {
+      "id": "add_devices",
+      "template": "add_devices"
+    }
+  ],
+  "repair": [
+    {
+      "id": "api"
+    },
+    {
+      "id": "2fa"
+    },
+    {
+      "id": "done",
+      "template": "done"
+    }
+  ]
+}

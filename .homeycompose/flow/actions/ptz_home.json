@@ -1,0 +1,13 @@
+{
+    "title": {
+      "en": "PTZ Home",
+      "nl": "PTZ Home"
+    },
+    "args": [
+      {
+        "type": "device",
+        "name": "device",
+        "filter": "driver_id=ptz-camera"
+      }
+    ]
+  }

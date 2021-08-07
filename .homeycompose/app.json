@@ -1,0 +1,76 @@
+{
+  "id": "com.synology.ss",
+  "version": "3.4.0",
+  "compatibility": ">=5.0.0",
+  "sdk": 3,
+  "name": {
+    "en": "Surveillance Station 2"
+  },
+  "brandColor": "#333333",
+  "description": {
+    "en": "Adds support for camera's available in Synology Surveillance Station",
+    "nl": "Ondersteund Synology Surveillance Station camera's"
+  },
+  "contributing": {
+    "donate": {
+      "paypal": {
+        "username": "marcschut"
+      }
+    }
+  },
+  "bugs": {
+    "url": "https://github.com/marcschut002/athom.com.synology.ss/issues"
+  },
+  "source": "https://github.com/marcschut002/athom.com.synology.ss",
+  "homepage": "https://github.com/marcschut002/athom.com.synology.ss",
+  "homeyCommunityTopicId": 32737,
+  "category": [
+    "security"
+  ],
+  "permissions": [],
+  "images": {
+    "large": "/assets/images/large.png",
+    "small": "/assets/images/small.png"
+  },
+  "author": {
+    "name": "Marc Schut",
+    "email": "marcschut@icloud.com"
+  },
+  "api": {
+    "onCameraMotion": {
+      "method": "get",
+      "path": "/motion/:id",
+      "public": true
+    },
+    "onCameraEnabled": {
+      "method": "get",
+      "path": "/enabled/:id",
+      "public": true
+    },
+    "onCameraDisabled": {
+      "method": "get",
+      "path": "/disabled/:id",
+      "public": true
+    },
+    "onStationHomeModeOn": {
+      "method": "get",
+      "path": "/homemode_on/:id",
+      "public": true
+    },
+    "onStationHomeModeOff": {
+      "method": "get",
+      "path": "/homemode_off/:id",
+      "public": true
+    },
+    "onCameraConnectionLost": {
+      "method": "get",
+      "path": "/connection_lost/:id",
+      "public": true
+    },
+    "onCameraConnectionNormal": {
+      "method": "get",
+      "path": "/connection_normal/:id",
+      "public": true
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+    "title": {
+      "en": "Update camera image",
+      "nl": "Update camera afbeelding"
+    },
+    "deprecated": true,
+    "args": [
+      {
+        "type": "device",
+        "name": "device",
+        "filter": "driver_id=camera"
+      }
+    ]
+  }

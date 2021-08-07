@@ -1,4 +1,5 @@
 {
+  "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.synology.ss",
   "version": "3.4.0",
   "compatibility": ">=5.0.0",
@@ -35,65 +36,6 @@
   "author": {
     "name": "Marc Schut",
     "email": "marcschut@icloud.com"
-  },
-  "capabilities": {
-    "home_mode": {
-      "type": "boolean",
-      "title": {
-        "nl": "Home Mode",
-        "en": "Home Mode"
-      },
-      "getable": true,
-      "setable": true,
-      "insights": true,
-      "insightsTitleTrue": {
-        "en": "Enter Home Mode",
-        "nl": "Home Mode Openen"
-      },
-      "insightsTitleFalse": {
-        "en": "Leave Home Mode",
-        "nl": "Home Mode Verlaten"
-      }
-    },
-    "enabled": {
-      "type": "boolean",
-      "title": {
-        "nl": "Ingeschakeld",
-        "en": "Enabled"
-      },
-      "getable": true,
-      "setable": true,
-      "insights": true,
-      "insightsTitleTrue": {
-        "en": "Enabled",
-        "nl": "Ingeschakeld"
-      },
-      "insightsTitleFalse": {
-        "en": "Disabled",
-        "nl": "Uitgeschakeld"
-      }
-    },
-    "ptz_txt": {
-      "type": "string",
-      "title": {
-        "nl": "PTZ",
-        "en": "PTZ"
-      },
-      "icon": "/drivers/camera/assets/svg/ptz.svg",
-      "getable": true,
-      "setable": false
-    },
-    "ptz_bln": {
-      "type": "boolean",
-      "title": {
-        "nl": "PTZ",
-        "en": "PTZ"
-      },
-      "icon": "/drivers/camera/assets/svg/ptz.svg",
-      "getable": false,
-      "setable": false,
-      "uiComponent": null
-    }
   },
   "api": {
     "onCameraMotion": {
@@ -132,9 +74,379 @@
       "public": true
     }
   },
+  "flow": {
+    "triggers": [
+      {
+        "title": {
+          "en": "Connection lost",
+          "nl": "Connectie verbroken"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=camera|ptz-camera"
+          }
+        ],
+        "id": "camera_connection_lost"
+      },
+      {
+        "title": {
+          "en": "Connection normal",
+          "nl": "Connectie hersteld"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=camera|ptz-camera"
+          }
+        ],
+        "id": "camera_connection_normal"
+      },
+      {
+        "title": {
+          "en": "Camera Disabled",
+          "nl": "Camera Uitgeschakeld"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=camera|ptz-camera"
+          }
+        ],
+        "id": "camera_disabled"
+      },
+      {
+        "title": {
+          "en": "Camera Enabled",
+          "nl": "Camera Ingeschakeld"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=camera|ptz-camera"
+          }
+        ],
+        "id": "camera_enabled"
+      },
+      {
+        "title": {
+          "en": "Home Mode Disabled",
+          "nl": "Home Mode Uitgeschakeld"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=station"
+          }
+        ],
+        "id": "home_mode_off"
+      },
+      {
+        "title": {
+          "en": "Home Mode Enabled",
+          "nl": "Home Mode Ingeschakeld"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=station"
+          }
+        ],
+        "id": "home_mode_on"
+      }
+    ],
+    "conditions": [
+      {
+        "title": {
+          "en": "!{{Connected|Disconnected}}",
+          "nl": "!{{Verbonden|Verbinding verbroken}}"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=camera|ptz-camera"
+          }
+        ],
+        "id": "is_connected"
+      },
+      {
+        "title": {
+          "en": "!{{Enabled|Disabled}}",
+          "nl": "!{{Ingeschakeld|Uitgeschakeld}}"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=camera|ptz-camera"
+          }
+        ],
+        "id": "is_enabled"
+      }
+    ],
+    "actions": [
+      {
+        "title": {
+          "en": "Create Snapshot",
+          "nl": "Maak een snapshot"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=camera|ptz-camera"
+          }
+        ],
+        "id": "create_snapshot"
+      },
+      {
+        "title": {
+          "en": "Disable",
+          "nl": "Uitschakelen"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=camera|ptz-camera"
+          }
+        ],
+        "id": "disable_camera"
+      },
+      {
+        "title": {
+          "en": "Enable",
+          "nl": "Inschakelen"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=camera|ptz-camera"
+          }
+        ],
+        "id": "enable_camera"
+      },
+      {
+        "title": {
+          "en": "Start Recording",
+          "nl": "Start Opname"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=camera|ptz-camera"
+          }
+        ],
+        "id": "ext_record_start"
+      },
+      {
+        "title": {
+          "en": "Stop Recording",
+          "nl": "Stop Opname"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=camera|ptz-camera"
+          }
+        ],
+        "id": "ext_record_stop"
+      },
+      {
+        "title": {
+          "en": "Home Mode Disabled",
+          "nl": "Home Mode Uitgeschakeld"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=station"
+          }
+        ],
+        "id": "home_mode_off"
+      },
+      {
+        "title": {
+          "en": "Home Mode Enabled",
+          "nl": "Home Mode Ingeschakeld"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=station"
+          }
+        ],
+        "id": "home_mode_on"
+      },
+      {
+        "title": {
+          "en": "AutoFocus",
+          "nl": "Autofocus"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=ptz-camera"
+          }
+        ],
+        "id": "ptz_autofocus"
+      },
+      {
+        "title": {
+          "en": "AutoPan",
+          "nl": "AutoPan"
+        },
+        "titleFormatted": {
+          "en": "[[start]] AutoPan",
+          "nl": "[[start]] AutoPan"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=ptz-camera"
+          },
+          {
+            "type": "dropdown",
+            "name": "start",
+            "title": {
+              "en": "Start/Stop",
+              "nl": "Start/Stop"
+            },
+            "values": [
+              {
+                "id": "start",
+                "label": "Start"
+              },
+              {
+                "id": "stop",
+                "label": "Stop"
+              }
+            ]
+          }
+        ],
+        "id": "ptz_autopan"
+      },
+      {
+        "title": {
+          "en": "PTZ Home",
+          "nl": "PTZ Home"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=ptz-camera"
+          }
+        ],
+        "id": "ptz_home"
+      },
+      {
+        "title": {
+          "en": "Run Patrol",
+          "nl": "Run Patrol"
+        },
+        "titleFormatted": {
+          "en": "Run Patrol [[patrol]]",
+          "nl": "Run Patrol [[patrol]]"
+        },
+        "args": [
+          {
+            "type": "autocomplete",
+            "name": "patrol",
+            "placeholder": {
+              "en": "Default",
+              "nl": "Standaard"
+            }
+          },
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=ptz-camera"
+          }
+        ],
+        "id": "ptz_runpatrol"
+      },
+      {
+        "title": {
+          "en": "Set Position",
+          "nl": "Set Position"
+        },
+        "titleFormatted": {
+          "en": "Set Position H=[[pos_x]],V=[[pos_y]]",
+          "nl": "Set Position H=[[pos_x]],V=[[pos_y]]"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=ptz-camera"
+          },
+          {
+            "type": "number",
+            "name": "pos_x",
+            "title": {
+              "en": "Horizontal",
+              "nl": "Horizontaal"
+            },
+            "placeholder": {
+              "en": "Absolute position 0-640",
+              "nl": "Absolute positie 0-640"
+            },
+            "min": 0,
+            "max": 640,
+            "step": 1
+          },
+          {
+            "type": "number",
+            "name": "pos_y",
+            "title": {
+              "en": "Vertical",
+              "nl": "Verticaal"
+            },
+            "placeholder": {
+              "en": "Absolute position 0-480",
+              "nl": "Absolute positie 0-480"
+            },
+            "min": 0,
+            "max": 480,
+            "step": 1
+          }
+        ],
+        "id": "ptz_setposition"
+      },
+      {
+        "title": {
+          "en": "Update camera image",
+          "nl": "Update camera afbeelding"
+        },
+        "deprecated": true,
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=camera"
+          }
+        ],
+        "id": "update_image"
+      }
+    ]
+  },
   "drivers": [
     {
-      "id": "camera",
       "name": {
         "en": "Camera"
       },
@@ -145,9 +457,7 @@
       },
       "capabilities": [
         "enabled",
-        "button.repair_action_rules",
-        "ptz_bln",
-        "ptz_txt"
+        "button.repair_action_rules"
       ],
       "capabilitiesOptions": {
         "button.repair_action_rules": {
@@ -176,7 +486,7 @@
                 "en": "Timeout",
                 "nl": "Time-out"
               },
-              "units" : {
+              "units": {
                 "en": "Seconds",
                 "nl": "Seconde"
               },
@@ -227,7 +537,8 @@
                     "en": "Low bandwidth",
                     "nl": "Lage bandbreedte"
                   }
-                }]
+                }
+              ]
             }
           ]
         }
@@ -269,10 +580,147 @@
           "id": "done",
           "template": "done"
         }
-      ]
+      ],
+      "id": "camera"
     },
     {
-      "id": "station",
+      "name": {
+        "en": "PTZ Camera"
+      },
+      "class": "camera",
+      "images": {
+        "large": "/drivers/ptz-camera/assets/images/large.png",
+        "small": "/drivers/ptz-camera/assets/images/small.png"
+      },
+      "capabilities": [
+        "enabled",
+        "button.repair_action_rules"
+      ],
+      "capabilitiesOptions": {
+        "button.repair_action_rules": {
+          "maintenanceAction": true,
+          "title": {
+            "en": "Repair Action Rules",
+            "nl": "Repareer Actieregels"
+          },
+          "desc": {
+            "en": "Use this if you are missing some (or all) action rules on your Synology Surveillance Station. This action will check and install the necessary action rules.",
+            "nl": "Gebruik deze actie als je een aantal (of alle) actieregels mist op je Synology Surveillance Station. Deze actie installeert de noodzakelijke actieregels."
+          }
+        }
+      },
+      "settings": [
+        {
+          "type": "group",
+          "label": {
+            "en": "Motion Detection"
+          },
+          "children": [
+            {
+              "id": "motion_timeout",
+              "type": "number",
+              "label": {
+                "en": "Timeout",
+                "nl": "Time-out"
+              },
+              "units": {
+                "en": "Seconds",
+                "nl": "Seconde"
+              },
+              "hint": {
+                "en": "Timeout should be at least 10 seconds. To little could mean the camera could trigger to much motion events.",
+                "nl": "Time-out moet minimaal 10 seconde zijn. Een te lage instelling kan er voor zorgen dat de camera te veel beweging detecteert."
+              },
+              "value": 21
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Snapshot"
+          },
+          "children": [
+            {
+              "id": "profiletype",
+              "type": "dropdown",
+              "label": {
+                "en": "Profile",
+                "nl": "Profiel"
+              },
+              "hint": {
+                "en": "Setup your stream profiles in your Synology: https://www.synology.com/en-us/knowledgebase/Surveillance/help/SurveillanceStation/camera_settings_video",
+                "nl": "De instellingen van de profielen kun je aanpassen in je Synology: https://www.synology.com/nl-nl/knowledgebase/Surveillance/help/SurveillanceStation/camera_settings_video"
+              },
+              "value": "balanced",
+              "values": [
+                {
+                  "id": "high",
+                  "label": {
+                    "en": "High quality",
+                    "nl": "Hoge kwaliteit"
+                  }
+                },
+                {
+                  "id": "balanced",
+                  "label": {
+                    "en": "Balanced",
+                    "nl": "Gebalanceerd"
+                  }
+                },
+                {
+                  "id": "low",
+                  "label": {
+                    "en": "Low bandwidth",
+                    "nl": "Lage bandbreedte"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "pair": [
+        {
+          "id": "station"
+        },
+        {
+          "id": "nostation"
+        },
+        {
+          "id": "done",
+          "template": "done"
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          },
+          "options": {
+            "singular": true
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "repair": [
+        {
+          "id": "station"
+        },
+        {
+          "id": "nostation"
+        },
+        {
+          "id": "done",
+          "template": "done"
+        }
+      ],
+      "id": "ptz-camera"
+    },
+    {
       "name": {
         "en": "Surveillance Station"
       },
@@ -332,358 +780,46 @@
           "id": "done",
           "template": "done"
         }
-      ]
+      ],
+      "id": "station"
     }
   ],
-  "flow": {
-    "triggers": [
-      {
-        "id": "home_mode_on",
-        "title": {
-          "en": "Home Mode Enabled",
-          "nl": "Home Mode Ingeschakeld"
-        },
-        "args": [
-          {
-            "name": "station",
-            "type": "device",
-            "filter": "driver_id=station"
-          }
-        ]
+  "capabilities": {
+    "enabled": {
+      "type": "boolean",
+      "title": {
+        "nl": "Ingeschakeld",
+        "en": "Enabled"
       },
-      {
-        "id": "home_mode_off",
-        "title": {
-          "en": "Home Mode Disabled",
-          "nl": "Home Mode Uitgeschakeld"
-        },
-        "args": [
-          {
-            "name": "station",
-            "type": "device",
-            "filter": "driver_id=station"
-          }
-        ]
+      "getable": true,
+      "setable": true,
+      "insights": true,
+      "insightsTitleTrue": {
+        "en": "Enabled",
+        "nl": "Ingeschakeld"
       },
-      {
-        "id": "camera_disabled",
-        "title": {
-          "en": "Camera Disabled",
-          "nl": "Camera Uitgeschakeld"
-        },
-        "args": [
-          {
-            "name": "camera",
-            "type": "device",
-            "filter": "driver_id=camera"
-          }
-        ]
-      },
-      {
-        "id": "camera_enabled",
-        "title": {
-          "en": "Camera Enabled",
-          "nl": "Camera Ingeschakeld"
-        },
-        "args": [
-          {
-            "name": "camera",
-            "type": "device",
-            "filter": "driver_id=camera"
-          }
-        ]
-      },
-      {
-        "id": "camera_connection_lost",
-        "title": {
-          "en": "Connection lost",
-          "nl": "Connectie verbroken"
-        },
-        "args": [
-          {
-            "name": "camera",
-            "type": "device",
-            "filter": "driver_id=camera"
-          }
-        ]
-      },
-      {
-        "id": "camera_connection_normal",
-        "title": {
-          "en": "Connection normal",
-          "nl": "Connectie hersteld"
-        },
-        "args": [
-          {
-            "name": "camera",
-            "type": "device",
-            "filter": "driver_id=camera"
-          }
-        ]
+      "insightsTitleFalse": {
+        "en": "Disabled",
+        "nl": "Uitgeschakeld"
       }
-    ],
-    "conditions": [
-      {
-        "id": "is_enabled",
-        "title": {
-          "en": "!{{Enabled|Disabled}}",
-          "nl": "!{{Ingeschakeld|Uitgeschakeld}}"
-        },
-        "args": [
-          {
-            "name": "camera",
-            "type": "device",
-            "filter": "driver_id=camera"
-          }
-        ]
+    },
+    "home_mode": {
+      "type": "boolean",
+      "title": {
+        "nl": "Home Mode",
+        "en": "Home Mode"
       },
-      {
-        "id": "is_connected",
-        "title": {
-          "en": "!{{Connected|Disconnected}}",
-          "nl": "!{{Verbonden|Verbinding verbroken}}"
-        },
-        "args": [
-          {
-            "name": "camera",
-            "type": "device",
-            "filter": "driver_id=camera"
-          }
-        ]
+      "getable": true,
+      "setable": true,
+      "insights": true,
+      "insightsTitleTrue": {
+        "en": "Enter Home Mode",
+        "nl": "Home Mode Openen"
+      },
+      "insightsTitleFalse": {
+        "en": "Leave Home Mode",
+        "nl": "Home Mode Verlaten"
       }
-    ],
-    "actions": [
-      {
-        "id": "update_image",
-        "title": {
-          "en": "Update camera image",
-          "nl": "Update camera afbeelding"
-        },
-        "deprecated": true,
-        "args": [
-          {
-            "name": "camera",
-            "type": "device",
-            "filter": "driver_id=camera"
-          }
-        ]
-      },
-      {
-        "id": "home_mode_on",
-        "title": {
-          "en": "Home Mode Enabled",
-          "nl": "Home Mode Ingeschakeld"
-        },
-        "args": [
-          {
-            "name": "station",
-            "type": "device",
-            "filter": "driver_id=station"
-          }
-        ]
-      },
-      {
-        "id": "home_mode_off",
-        "title": {
-          "en": "Home Mode Disabled",
-          "nl": "Home Mode Uitgeschakeld"
-        },
-        "args": [
-          {
-            "name": "station",
-            "type": "device",
-            "filter": "driver_id=station"
-          }
-        ]
-      },
-      {
-        "id": "ext_record_start",
-        "title": {
-          "en": "Start Recording",
-          "nl": "Start Opname"
-        },
-        "args": [
-          {
-            "name": "camera",
-            "type": "device",
-            "filter": "driver_id=camera"
-          }
-        ]
-      },
-      {
-        "id": "ext_record_stop",
-        "title": {
-          "en": "Stop Recording",
-          "nl": "Stop Opname"
-        },
-        "args": [
-          {
-            "name": "camera",
-            "type": "device",
-            "filter": "driver_id=camera"
-          }
-        ]
-      },
-      {
-        "id": "enable_camera",
-        "title": {
-          "en": "Enable",
-          "nl": "Inschakelen"
-        },
-        "args": [
-          {
-            "name": "camera",
-            "type": "device",
-            "filter": "driver_id=camera"
-          }
-        ]
-      },
-      {
-        "id": "disable_camera",
-        "title": {
-          "en": "Disable",
-          "nl": "Uitschakelen"
-        },
-        "args": [
-          {
-            "name": "camera",
-            "type": "device",
-            "filter": "driver_id=camera"
-          }
-        ]
-      },
-      {
-        "id": "create_snapshot",
-        "title": {
-          "en": "Create Snapshot",
-          "nl": "Maak een snapshot"
-        },
-        "args": [
-          {
-            "name": "camera",
-            "type": "device",
-            "filter": "driver_id=camera"
-          }
-        ]
-      },
-      {
-        "id": "ptz_home",
-        "title": {
-          "en": "PTZ Home",
-          "nl": "PTZ Home"
-        },
-        "args": [
-          {
-            "name": "camera",
-            "type": "device",
-            "filter": "driver_id=camera"
-          }
-        ]
-      },
-      {
-        "id": "ptz_gopreset",
-        "title": {
-          "en": "PTZ Go Preset",
-          "nl": "PTZ Go Preset"
-        },
-        "args": [
-          {
-            "name": "camera",
-            "type": "device",
-            "filter": "driver_id=camera"
-          }
-        ]
-      },
-      {
-        "id": "ptz_runpatrol",
-        "title": {
-          "en": "PTZ Run Patrol",
-          "nl": "PTZ Run Patrol"
-        },
-        "args": [
-          {
-            "name": "camera",
-            "type": "device",
-            "filter": "driver_id=camera"
-          }
-        ]
-      },
-      {
-        "id": "ptz_autofocus",
-        "title": {
-          "en": "PTZ AutoFocus",
-          "nl": "PTZ Autofocus"
-        },
-        "args": [
-          {
-            "name": "camera",
-            "type": "device",
-            "filter": "driver_id=camera"
-          }
-        ]
-      },
-      {
-        "id": "ptz_setposition",
-        "title": {
-          "en": "PTZ Set Position",
-          "nl": "PTZ Set Position"
-        },
-        "args": [
-          {
-            "name": "camera",
-            "type": "device",
-            "filter": "driver_id=camera"
-          },
-          {
-            "type": "range",
-            "name": "pos_x",
-            "title": { 
-              "en": "Horizontal",
-              "nl": "Horizontaal" 
-            },
-            "min": 0,
-            "max": 640,
-            "step": 1
-          },
-          {
-            "type": "range",
-            "name": "pos_y",
-            "title": { 
-              "en": "Vertical",
-              "nl": "Verticaal"
-            },
-            "min": 0,
-            "max": 480,
-            "step": 1
-          }
-        ]
-      },
-      {
-        "id": "ptz_autopan",
-        "title": {
-          "en": "PTZ AutoPan",
-          "nl": "PTZ AutoPan"
-        },
-        "args": [
-          {
-            "name": "camera",
-            "type": "device",
-            "filter": "driver_id=camera"
-          },
-          {
-            "type": "dropdown",
-            "name": "start",
-            "title": { 
-              "en": "Start/Stop",
-              "nl": "Start/Stop"
-            },
-            "values": [
-              { "id": "start", "label": "Start" },
-              { "id": "stop", "label": "Stop" }
-            ]
-          }
-        ]
-      }
-    ]
+    }
   }
 }

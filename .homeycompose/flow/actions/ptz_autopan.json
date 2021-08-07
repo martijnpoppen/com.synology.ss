@@ -1,0 +1,35 @@
+{
+    "title": {
+        "en": "AutoPan",
+        "nl": "AutoPan"
+    },
+    "titleFormatted": { 
+        "en": "[[start]] AutoPan",
+        "nl": "[[start]] AutoPan"  
+    },
+    "args": [
+        {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=ptz-camera"
+        },
+        {
+            "type": "dropdown",
+            "name": "start",
+            "title": {
+                "en": "Start/Stop",
+                "nl": "Start/Stop"
+            },
+            "values": [
+                {
+                    "id": "start",
+                    "label": "Start"
+                },
+                {
+                    "id": "stop",
+                    "label": "Stop"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,73 @@
+<link href="../assets/css/styles.css" rel="stylesheet" type="text/css"/>
+<script>
+    Homey.setTitle( Homey.__('repair.camera.title') );
+
+    const station_form = document.getElementById('station-form');
+    station_form.onsubmit = submit;
+
+    const station_submit = document.getElementById('station_submit');
+    station_submit.value = Homey.__("repair.camera.station_submit");
+
+    // show loading overlay
+    Homey.showLoadingOverlay();
+
+    Homey.emit( 'station', {}).then(function( result ){
+
+      let station_sel = document.getElementById('station');
+      station_sel.length = 0;
+
+      if(result.length===0) {
+        Homey.showView('nostation');
+        return;
+      }
+
+      Object.keys(result).forEach(i => {
+        const device = result[i];
+        let opt = document.createElement('option');
+        opt.appendChild( document.createTextNode(device.name) );
+        opt.value = device.id;
+        station_sel.appendChild(opt);
+      });
+      Homey.hideLoadingOverlay();
+    });
+
+    function submit(event) {
+
+        // For this example, don't actually submit the form
+        event.preventDefault();
+
+        // show loading overlay
+        Homey.showLoadingOverlay();
+
+        var data = {
+            'station': document.querySelector('select[name="station"]').value
+        };
+
+        Homey.emit( 'station_save', data).then(function( result ){
+            console.log('result: ' + result);
+            if(result === true) {
+                Homey.confirm( Homey.__('repair.camera.done'), 'info', function(){
+                Homey.showView('done');
+              });
+            } else {
+                Homey.hideLoadingOverlay();
+                Homey.alert(Homey.__('exception.authentication_failed'), 'error');
+            }
+        })
+    }
+
+</script>
+<div class="hy-tmpl-api-logo">
+    <img class="my-svg" src="../assets/svg/api.svg" alt="api">
+</div>
+<p data-i18n="repair.camera.description" ></p>
+<form id="station-form" class="hy-tmpl-api-form" action="/" method="post">
+    <div class="hy-tmpl-api-row row">
+        <label class="hy-label hy-tmpl-api-label" for="station" data-i18n="repair.camera.station" ></label>
+        <select class="hy-input-text" name="station" id="station">
+        </select>
+    </div>
+    <div class="hy-tmpl-api-row row">
+        <input class="hy-button hy-button-primary hy-button-fill hy-tmpl-api-submit button" type="submit" id="station_submit" data-i18n="repair.camera.station_submit">
+    </div>
+</form>

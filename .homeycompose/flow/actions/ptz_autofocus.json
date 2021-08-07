@@ -1,0 +1,13 @@
+{
+    "title": {
+      "en": "AutoFocus",
+      "nl": "Autofocus"
+    },
+    "args": [
+      {
+        "type": "device",
+        "name": "device",
+        "filter": "driver_id=ptz-camera"
+      }
+    ]
+  }

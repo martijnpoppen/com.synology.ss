@@ -1,0 +1,13 @@
+{
+    "title": {
+      "en": "!{{Enabled|Disabled}}",
+      "nl": "!{{Ingeschakeld|Uitgeschakeld}}"
+    },
+    "args": [
+      {
+        "type": "device",
+        "name": "device",
+        "filter": "driver_id=camera|ptz-camera"
+      }
+    ]
+  }

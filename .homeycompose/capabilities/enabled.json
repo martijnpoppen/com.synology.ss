@@ -1,0 +1,18 @@
+{
+  "type": "boolean",
+  "title": {
+    "nl": "Ingeschakeld",
+    "en": "Enabled"
+  },
+  "getable": true,
+  "setable": true,
+  "insights": true,
+  "insightsTitleTrue": {
+    "en": "Enabled",
+    "nl": "Ingeschakeld"
+  },
+  "insightsTitleFalse": {
+    "en": "Disabled",
+    "nl": "Uitgeschakeld"
+  }
+}

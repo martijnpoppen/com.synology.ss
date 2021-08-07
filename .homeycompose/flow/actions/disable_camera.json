@@ -1,0 +1,13 @@
+{
+    "title": {
+      "en": "Disable",
+      "nl": "Uitschakelen"
+    },
+    "args": [
+      {
+        "type": "device",
+        "name": "device",
+        "filter": "driver_id=camera|ptz-camera"
+      }
+    ]
+  }

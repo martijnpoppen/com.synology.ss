@@ -33,7 +33,8 @@
     }
 
     Homey.on('station-api-ok', function( data ){
-        Homey.emit('sid', { sid: data.sid, did: data.did }).then(function( result ){
+        console.log(data);
+        Homey.emit('sid', { sid: data.sid, did: data.did, station: data.station }).then(function( result ){
             if(result===true) {
                 Homey.showView('list_devices');
             }

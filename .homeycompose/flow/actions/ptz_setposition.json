@@ -1,0 +1,47 @@
+{
+    "title": {
+      "en": "Set Position",
+      "nl": "Set Position"
+    },
+    "titleFormatted": { 
+      "en": "Set Position H=[[pos_x]],V=[[pos_y]]",
+      "nl": "Set Position H=[[pos_x]],V=[[pos_y]]"
+    },
+    "args": [
+      {
+        "type": "device",
+        "name": "device",
+        "filter": "driver_id=ptz-camera"
+      },
+      {
+        "type": "number",
+        "name": "pos_x",
+        "title": {
+          "en": "Horizontal",
+          "nl": "Horizontaal"
+        },
+        "placeholder": {
+          "en": "Absolute position 0-640",
+          "nl": "Absolute positie 0-640"
+        },
+        "min": 0,
+        "max": 640,
+        "step": 1
+      },
+      {
+        "type": "number",
+        "name": "pos_y",
+        "title": {
+          "en": "Vertical",
+          "nl": "Verticaal"
+        },
+        "placeholder": {
+          "en": "Absolute position 0-480",
+          "nl": "Absolute positie 0-480"
+        },
+        "min": 0,
+        "max": 480,
+        "step": 1
+      }
+    ]
+  }

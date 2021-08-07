@@ -1,0 +1,13 @@
+{
+    "title": {
+      "en": "Create Snapshot",
+      "nl": "Maak een snapshot"
+    },
+    "args": [
+      {
+        "type": "device",
+        "name": "device",
+        "filter": "driver_id=camera|ptz-camera"
+      }
+    ]
+  }

@@ -1,0 +1,18 @@
+{
+  "type": "boolean",
+  "title": {
+    "nl": "Home Mode",
+    "en": "Home Mode"
+  },
+  "getable": true,
+  "setable": true,
+  "insights": true,
+  "insightsTitleTrue": {
+    "en": "Enter Home Mode",
+    "nl": "Home Mode Openen"
+  },
+  "insightsTitleFalse": {
+    "en": "Leave Home Mode",
+    "nl": "Home Mode Verlaten"
+  }
+}

@@ -1,0 +1,13 @@
+{
+    "title": {
+      "en": "Connection lost",
+      "nl": "Connectie verbroken"
+    },
+    "args": [
+      {
+        "type": "device",
+        "name": "device",
+        "filter": "driver_id=camera|ptz-camera"
+      }
+    ]
+  }

@@ -1,0 +1,13 @@
+{
+    "title": {
+      "en": "Start Recording",
+      "nl": "Start Opname"
+    },
+    "args": [
+      {
+        "type": "device",
+        "name": "device",
+        "filter": "driver_id=camera|ptz-camera"
+      }
+    ]
+  }

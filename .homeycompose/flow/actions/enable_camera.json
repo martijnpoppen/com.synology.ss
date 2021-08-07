@@ -1,0 +1,13 @@
+{
+    "title": {
+      "en": "Enable",
+      "nl": "Inschakelen"
+    },
+    "args": [
+      {
+        "type": "device",
+        "name": "device",
+        "filter": "driver_id=camera|ptz-camera"
+      }
+    ]
+  }

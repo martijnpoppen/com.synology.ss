@@ -1,0 +1,13 @@
+{
+    "title": {
+      "en": "Camera Disabled",
+      "nl": "Camera Uitgeschakeld"
+    },
+    "args": [
+      {
+        "type": "device",
+        "name": "device",
+        "filter": "driver_id=camera|ptz-camera"
+      }
+    ]
+  }

@@ -17,11 +17,7 @@
         };
 
         Homey.emit( 'station-api-2fa', data).then(function( result ){
-            if(err !== null) {
-                Homey.hideLoadingOverlay();
-                // show error if any
-                Homey.alert(err, 'error');
-            } else if(result===true) {
+            if(result===true) {
                 console.log('login in progress');
             } else {
                 Homey.hideLoadingOverlay();
@@ -34,7 +30,7 @@
     }
 
     Homey.on('station-api-ok', function( data, callback ){
-        Homey.emit('sid', { sid: data.sid, did: data.did }).then(function( result ){
+        Homey.emit('sid', { sid: data.sid, did: data.did, station: data.station }).then(function( result ){
             if(result===true) {
               Homey.showView('list_devices');
             }

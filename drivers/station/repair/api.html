@@ -33,7 +33,7 @@
     }
 
     Homey.on('station-api-ok', function( data ){
-      Homey.emit('sid', { sid: data.sid, did: data.did }).then(function( result ){
+      Homey.emit('sid', { sid: data.sid, did: data.did, station: data.station }).then(function( result ){
         if(result===true) {
           Homey.confirm( Homey.__('repair.api.done'), 'info', function(){
             Homey.showView('done');

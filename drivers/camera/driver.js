@@ -12,80 +12,49 @@ module.exports = class CameraDriver extends Homey.Driver {
     this._flowTriggerCameraConnectionNormal = this.homey.flow.getDeviceTriggerCard('camera_connection_normal');
 
     this.homey.flow.getConditionCard('is_enabled').registerRunListener(async (args, state) => {
-      const response = await args.camera.getCapabilityValue('enabled');
+      const response = await args.device.getCapabilityValue('enabled');
       return response;
     });
 
     this.homey.flow.getConditionCard('is_connected').registerRunListener(async (args, state) => {
-      const response = await args.camera.isConnected();
+      const response = await args.device.isConnected();
       return response;
     });
 
     this.homey.flow.getActionCard('ext_record_start').registerRunListener(async args => {
-      await args.camera.externalRecordStart().catch(this.error);
+      await args.device.externalRecordStart().catch(this.error);
       return true;
     });
 
     this.homey.flow.getActionCard('ext_record_stop').registerRunListener(async args => {
-      await args.camera.externalRecordStop().catch(this.error);
+      await args.device.externalRecordStop().catch(this.error);
       return true;
     });
 
     this.homey.flow.getActionCard('enable_camera').registerRunListener(async args => {
-      await args.camera.enableCamera().catch(this.error);
+      await args.device.enableCamera().catch(this.error);
       return true;
     });
 
     this.homey.flow.getActionCard('disable_camera').registerRunListener(async args => {
-      await args.camera.disableCamera().catch(this.error);
+      await args.device.disableCamera().catch(this.error);
       return true;
     });
 
     this.homey.flow.getActionCard('update_image').registerRunListener(async args => {
-      await args.camera.snapshot.update();
+      await args.device.snapshot.update();
       return true;
     });
 
     this.homey.flow.getActionCard('create_snapshot').registerRunListener(async args => {
-      await args.camera.createSnapshot().catch(this.error);
+      await args.device.createSnapshot().catch(this.error);
       return true;
     });
 
-    this.homey.flow.getActionCard('ptz_home').registerRunListener(async args => {
-      const result = await args.camera.ptzHome().catch(error => {throw new Error(error)});
-      if(result===false) {
-        throw new Error(this.homey.__('exception.action_failed'));
-      }
-      return true;
-    });
-
-    this.homey.flow.getActionCard('ptz_autofocus').registerRunListener(async args => {
-      const result = await args.camera.ptzAutoFocus().catch(error => {throw new Error(error)});
-      if(result===false) {
-        throw new Error(this.homey.__('exception.action_failed'));
-      }
-      return true;
-    });
-
-    this.homey.flow.getActionCard('ptz_autopan').registerRunListener(async args => {
-      const start = args.start === "start" ? true:false;
-      const result = await args.camera.ptzAutoPan(start).catch(error => {throw new Error(error)});
-      if(result===false) {
-        throw new Error(this.homey.__('exception.action_failed'));
-      }
-      return true;
-    });
-
-    this.homey.flow.getActionCard('ptz_setposition').registerRunListener(async args => {
-      const result = await args.camera.ptzSetPosition(args.pos_x,args.pos_y).catch(error => {throw new Error(error)});
-      if(result===false) {
-        throw new Error(this.homey.__('exception.action_failed'));
-      }
-      return true;
-    });
+    
   }
 
-  async onPair(session) {
+  async onPair(session, filter_ptz=false) {
     let api;
     let stationId;
 
@@ -125,7 +94,8 @@ module.exports = class CameraDriver extends Homey.Driver {
       const qs = {
         api: 'SYNO.SurveillanceStation.Camera',
         method: 'List',
-        version: 3,
+        version: 8,
+        basic: true
       };
       const apiUrl = await stationDevice.getAPIUrl('/webapi/entry.cgi', qs);
 
@@ -147,18 +117,24 @@ module.exports = class CameraDriver extends Homey.Driver {
 
           this.log(cam.name);
 
-          // set cameralist
-          const camera = {
-            name: cam.name,
-            data: {
-              id: cam.id,
-            },
-            store: {
-              station_id: stationId,
-              version: this.homey.manifest.version,
-            },
-          };
-          devices.push(camera);
+          const ptz = cam.deviceType & 4;
+          const ptzBln = (ptz === 4) ? true:false;
+
+          if(filter_ptz === false || (filter_ptz === true && ptzBln === true)) {
+            
+              // set cameralist
+              const camera = {
+                name: cam.name,
+                data: {
+                  id: cam.id,
+                },
+                store: {
+                  station_id: stationId,
+                  version: this.homey.manifest.version,
+                },
+              };
+              devices.push(camera);
+            }
         });
 
         this.log(devices);
