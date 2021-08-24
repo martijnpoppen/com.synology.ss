@@ -46,7 +46,9 @@
             "en": "Timeout should be at least 10 seconds. To little could mean the camera could trigger to much motion events.",
             "nl": "Time-out moet minimaal 10 seconde zijn. Een te lage instelling kan er voor zorgen dat de camera te veel beweging detecteert."
           },
-          "value": 21
+          "value": 21,
+          "min": 10,
+          "max": 60
         }
       ]
     },

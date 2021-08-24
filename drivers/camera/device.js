@@ -71,6 +71,11 @@ class SynoCameraDevice extends DeviceBase {
       await this.addCapability('button.repair_action_rules');
     }
 
+    if (appVersion === '4.0.0') {
+      // delete action rules
+      await this.deleteActionRules();
+    }
+
     // set version
     this.setStoreValue('version', appVersion).catch(this.error);
     return true;
@@ -97,6 +102,54 @@ class SynoCameraDevice extends DeviceBase {
         clearInterval(intVal);
       }
     }, 1000);
+  }
+
+  getId() {
+    const data = this.getData();
+    return data.id;
+  }
+
+  getStationId() {
+    const stationId = this.getStoreValue('station_id');
+    if (stationId === null || stationId === '') {
+      return '0';
+    }
+    return stationId;
+  }
+
+  getDriver() {
+    return this.driver.manifest.id;
+  }
+
+  async getStation() {
+    this.log('get station');
+
+    const stationId = this.getStoreValue('station_id');
+
+    if (stationId !== undefined && stationId !== null) {
+      const station = this.homey.drivers.getDriver('station').getDevice({ id: `${stationId}` });
+      if (station !== undefined && station !== null && !(station instanceof Error)) {
+        return station;
+      }
+      this.log(station);
+    }
+    return false;
+  }
+
+  async getWebhookUrl(eventName) {
+    const cameraId = this.getId();
+    const stationId = this.getStationId();
+    const driver = this.getDriver();
+    const station = await this.getStation();
+    let address;
+
+    if (station !== false && station.getSetting('webhook_host') === 'local') {
+      address = await this.getLocalAddress();
+    } else {
+      address = await this.getCloudAddress();
+    }
+
+    return `${address}/api/app/com.synology.ss/station/${stationId}/${driver}/${cameraId}/${eventName}`;
   }
 
   async repairActionRules() {
@@ -284,7 +337,8 @@ class SynoCameraDevice extends DeviceBase {
 
     const res = await this.fetchApi('/webapi/entry.cgi', qs);
 
-    if (res === undefined || res.data === undefined || res.data.cameras === undefined || res.data.cameras.length === 0
+    if (res === undefined || res.data === undefined || res.data.cameras === undefined
+      || res.data.cameras.length === 0
       || typeof res.data.cameras[0].enabled !== 'boolean') {
       throw new Error('no current state found or wrong data returned from Synology');
     }
@@ -360,23 +414,26 @@ class SynoCameraDevice extends DeviceBase {
   async syncConnectionLostRule() {
     this.log('sync connection lost rule');
 
-    const ruleId = this.getStoreValue('rule_connection_lost');
-    let success;
-    let rule;
+    const ruleConLost = this.getStoreValue('rule_connection_lost');
+    this.log(ruleConLost);
 
-    // no rule yet
-    if (ruleId !== undefined && Number.isInteger(ruleId) === true) {
-      rule = await this.getActionRule(ruleId);
+    let createNewRule = false;
+
+    if (ruleConLost === undefined || Number.isInteger(ruleConLost) === false) {
+      createNewRule = true;
+    } else {
+      const rule = await this.getActionRule(ruleConLost);
+      if (rule === false) {
+        createNewRule = true;
+      }
     }
 
-    if(rule === null || rule === false) {
-      // add action rule
-      success = await this.createConnectionLostRule();
+    if (createNewRule === false) {
+      return true;
     }
 
-    if (success !== true) {
-      success=false;
-    }
+    const success = await this.createConnectionLostRule();
+    this.log(success);
 
     return success;
   }
@@ -384,24 +441,26 @@ class SynoCameraDevice extends DeviceBase {
   async syncConnectionNormalRule() {
     this.log('sync connection normal rule');
 
-    const ruleId = this.getStoreValue('rule_connection_normal');
-    let success;
-    let rule;
-    
+    const ruleConNormal = this.getStoreValue('rule_connection_normal');
+    this.log(ruleConNormal);
 
-    // no rule yet
-    if (ruleId !== undefined && Number.isInteger(ruleId) === true) {
-      rule = await this.getActionRule(ruleId);
+    let createNewRule = false;
+
+    if (ruleConNormal === undefined || Number.isInteger(ruleConNormal) === false) {
+      createNewRule = true;
+    } else {
+      const rule = await this.getActionRule(ruleConNormal);
+      if (rule === false) {
+        createNewRule = true;
+      }
     }
 
-    if(rule === null || rule === false) {
-      // add action rule
-      success = await this.createConnectionNormalRule();
+    if (createNewRule === false) {
+      return true;
     }
 
-    if (success !== true) {
-      success=false;
-    }
+    const success = await this.createConnectionNormalRule();
+    this.log(success);
 
     return success;
   }
@@ -482,9 +541,6 @@ class SynoCameraDevice extends DeviceBase {
     } else {
       this.log('device motion started');
       this.setCapabilityValue('alarm_motion', true);
-      if (this.snapshot !== null) {
-        this.snapshot.update().catch(this.error);
-      }
     }
 
     const that = this;
@@ -505,11 +561,8 @@ class SynoCameraDevice extends DeviceBase {
   async createMotionDetectionRule() {
     this.log('create motion detection rule');
 
-    // create rule
-    const homeyAddress = await this.getHomeyAddress();
-    const data = this.getData();
-    const deviceApiMotionUrl = `${homeyAddress}/api/app/com.synology.ss/motion/${data.id}`;
-
+    const webhookUrl = await this.getWebhookUrl('motion');
+    const cameraId = this.getId();
     const qs = {
       api: 'SYNO.SurveillanceStation.ActionRule',
       method: 'Save',
@@ -520,15 +573,15 @@ class SynoCameraDevice extends DeviceBase {
       actType: 0,
       multiEvtSetting: 0,
       evtMinIntvl: 10,
-      events: `[{"evtSrc":0,"evtDsId":0,"evtDevId":${data.id},"evtId":5,"evtItem":-1,"evtTrig":1,"evtWebhookToken":""}]`,
-      actions: `[{"id":-1,"actSrc":1,"actDsId":0,"actDevId":-1,"actId":-1,"actItemId":-1,"actTimes":1,"actTimeUnit":1,"actTimeDur":10,"actRetPos":-2,"extUrl":"${deviceApiMotionUrl}","userName":"","password":"","iftttKey":"","iftttEvent":"","param1":"","param2":"","param3":"","webhookReqMethod":0,"httpContentType":0,"httpBody":""}]`,
+      events: `[{"evtSrc":0,"evtDsId":0,"evtDevId":${cameraId},"evtId":5,"evtItem":-1,"evtTrig":1,"evtWebhookToken":""}]`,
+      actions: `[{"id":-1,"actSrc":1,"actDsId":0,"actDevId":-1,"actId":-1,"actItemId":-1,"actTimes":1,"actTimeUnit":1,"actTimeDur":10,"actRetPos":-2,"extUrl":"${webhookUrl}","userName":"","password":"","iftttKey":"","iftttEvent":"","param1":"","param2":"","param3":"","webhookReqMethod":0,"httpContentType":0,"httpBody":""}]`,
       actSchedule: '"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"',
     };
 
     await this.fetchApi('/webapi/entry.cgi', qs);
 
     // get and save action rule id
-    const ruleMotion = await this.getActionRuleIdByUrl(deviceApiMotionUrl);
+    const ruleMotion = await this.getActionRuleIdByUrl(webhookUrl);
 
     if (ruleMotion !== undefined && Number.isInteger(ruleMotion) && ruleMotion > 0) {
       this.setStoreValue('rule_motion', ruleMotion).catch(this.error);
@@ -541,11 +594,8 @@ class SynoCameraDevice extends DeviceBase {
   async createEnabledRule() {
     this.log('create enabled rule');
 
-    // create rule
-    const homeyAddress = await this.getHomeyAddress();
-    const data = this.getData();
-    const webhookUrl = `${homeyAddress}/api/app/com.synology.ss/enabled/${data.id}`;
-
+    const webhookUrl = await this.getWebhookUrl('enabled');
+    const cameraId = this.getId();
     const qs = {
       api: 'SYNO.SurveillanceStation.ActionRule',
       method: 'Save',
@@ -556,7 +606,7 @@ class SynoCameraDevice extends DeviceBase {
       actType: 0,
       multiEvtSetting: 0,
       evtMinIntvl: 10,
-      events: `[{"evtSrc":0,"evtDsId":0,"evtDevId":${data.id},"evtId":1,"evtItem":-1,"evtTrig":0,"evtWebhookToken":""}]`,
+      events: `[{"evtSrc":0,"evtDsId":0,"evtDevId":${cameraId},"evtId":1,"evtItem":-1,"evtTrig":0,"evtWebhookToken":""}]`,
       actions: `[{"id":-1,"actSrc":1,"actDsId":0,"actDevId":-1,"actId":-1,"actItemId":-1,"actTimes":1,"actTimeUnit":1,"actTimeDur":10,"actRetPos":-2,"extUrl":"${webhookUrl}","userName":"","password":"","iftttKey":"","iftttEvent":"","param1":"","param2":"","param3":"","webhookReqMethod":0,"httpContentType":0,"httpBody":""}]`,
       actSchedule: '"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"',
     };
@@ -576,11 +626,8 @@ class SynoCameraDevice extends DeviceBase {
   async createDisabledRule() {
     this.log('create disabled rule');
 
-    // create rule
-    const homeyAddress = await this.getHomeyAddress();
-    const data = this.getData();
-    const webhookUrl = `${homeyAddress}/api/app/com.synology.ss/disabled/${data.id}`;
-
+    const webhookUrl = await this.getWebhookUrl('disabled');
+    const cameraId = this.getId();
     const qs = {
       api: 'SYNO.SurveillanceStation.ActionRule',
       method: 'Save',
@@ -591,7 +638,7 @@ class SynoCameraDevice extends DeviceBase {
       actType: 0,
       multiEvtSetting: 0,
       evtMinIntvl: 10,
-      events: `[{"evtSrc":0,"evtDsId":0,"evtDevId":${data.id},"evtId":2,"evtItem":-1,"evtTrig":0,"evtWebhookToken":""}]`,
+      events: `[{"evtSrc":0,"evtDsId":0,"evtDevId":${cameraId},"evtId":2,"evtItem":-1,"evtTrig":0,"evtWebhookToken":""}]`,
       actions: `[{"id":-1,"actSrc":1,"actDsId":0,"actDevId":-1,"actId":-1,"actItemId":-1,"actTimes":1,"actTimeUnit":1,"actTimeDur":10,"actRetPos":-2,"extUrl":"${webhookUrl}","userName":"","password":"","iftttKey":"","iftttEvent":"","param1":"","param2":"","param3":"","webhookReqMethod":0,"httpContentType":0,"httpBody":""}]`,
       actSchedule: '"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"',
     };
@@ -611,11 +658,8 @@ class SynoCameraDevice extends DeviceBase {
   async createConnectionLostRule() {
     this.log('create connection lost rule');
 
-    // create rule
-    const homeyAddress = await this.getHomeyAddress();
-    const data = this.getData();
-    const webhookUrl = `${homeyAddress}/api/app/com.synology.ss/connection_lost/${data.id}`;
-
+    const webhookUrl = await this.getWebhookUrl('connection_lost');
+    const cameraId = this.getId();
     const qs = {
       api: 'SYNO.SurveillanceStation.ActionRule',
       method: 'Save',
@@ -626,12 +670,13 @@ class SynoCameraDevice extends DeviceBase {
       actType: 0,
       multiEvtSetting: 0,
       evtMinIntvl: 10,
-      events: `[{"evtSrc":0,"evtDsId":0,"evtDevId":${data.id},"evtId":3,"evtItem":-1,"evtTrig":0,"evtWebhookToken":""}]`,
+      events: `[{"evtSrc":0,"evtDsId":0,"evtDevId":${cameraId},"evtId":3,"evtItem":-1,"evtTrig":0,"evtWebhookToken":""}]`,
       actions: `[{"id":-1,"actSrc":1,"actDsId":0,"actDevId":-1,"actId":-1,"actItemId":-1,"actTimes":1,"actTimeUnit":1,"actTimeDur":10,"actRetPos":-2,"extUrl":"${webhookUrl}","userName":"","password":"","iftttKey":"","iftttEvent":"","param1":"","param2":"","param3":"","webhookReqMethod":0,"httpContentType":0,"httpBody":""}]`,
       actSchedule: '"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"',
     };
 
-    await this.fetchApi('/webapi/entry.cgi', qs);
+    const response = await this.fetchApi('/webapi/entry.cgi', qs);
+    this.log(response);
 
     const ruleConnectionLost = await this.getActionRuleIdByUrl(webhookUrl);
 
@@ -646,11 +691,8 @@ class SynoCameraDevice extends DeviceBase {
   async createConnectionNormalRule() {
     this.log('create connection normal rule');
 
-    // create rule
-    const homeyAddress = await this.getHomeyAddress();
-    const data = this.getData();
-    const webhookUrl = `${homeyAddress}/api/app/com.synology.ss/connection_normal/${data.id}`;
-
+    const webhookUrl = await this.getWebhookUrl('connection_normal');
+    const cameraId = this.getId();
     const qs = {
       api: 'SYNO.SurveillanceStation.ActionRule',
       method: 'Save',
@@ -661,7 +703,7 @@ class SynoCameraDevice extends DeviceBase {
       actType: 0,
       multiEvtSetting: 0,
       evtMinIntvl: 10,
-      events: `[{"evtSrc":0,"evtDsId":0,"evtDevId":${data.id},"evtId":4,"evtItem":-1,"evtTrig":0,"evtWebhookToken":""}]`,
+      events: `[{"evtSrc":0,"evtDsId":0,"evtDevId":${cameraId},"evtId":4,"evtItem":-1,"evtTrig":0,"evtWebhookToken":""}]`,
       actions: `[{"id":-1,"actSrc":1,"actDsId":0,"actDevId":-1,"actId":-1,"actItemId":-1,"actTimes":1,"actTimeUnit":1,"actTimeDur":10,"actRetPos":-2,"extUrl":"${webhookUrl}","userName":"","password":"","iftttKey":"","iftttEvent":"","param1":"","param2":"","param3":"","webhookReqMethod":0,"httpContentType":0,"httpBody":""}]`,
       actSchedule: '"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"',
     };
@@ -840,7 +882,8 @@ class SynoCameraDevice extends DeviceBase {
 
   getMotionTimeoutSetting() {
     const motionTimeout = this.getSetting('motion_timeout');
-    if (motionTimeout !== undefined && Number.isInteger(motionTimeout) && motionTimeout >= 10) {
+    if (motionTimeout !== undefined && Number.isInteger(motionTimeout)
+    && motionTimeout >= 10 && motionTimeout <= 60) {
       return motionTimeout;
     } return 21;
   }
@@ -940,29 +983,15 @@ class SynoCameraDevice extends DeviceBase {
       });
   }
 
-  async getStation() {
-    this.log('get station');
-
-    const stationId = this.getStoreValue('station_id');
-
-    if (stationId !== undefined && stationId !== null) {
-      const station = this.homey.drivers.getDriver('station').getDevice({ id: `${stationId}` });
-      if (station !== undefined && station !== null && !(station instanceof Error)) {
-        return station;
-      }
-      this.log(station);
-    }
-    return false;
-  }
-
   async registerCameraForStation() {
     this.log('register camera for station');
 
     const station = await this.getStation();
     const data = this.getData();
+    const driver = this.getDriver();
 
     if (station !== false) {
-      await station.registerCamera(data.id);
+      await station.registerCamera(data.id, driver);
     }
   }
 
@@ -1015,13 +1044,27 @@ class SynoCameraDevice extends DeviceBase {
       version: 9,
     };
 
-    const disconStatus = [3,15];
+    const disconStatus = [3, 15];
     const response = await this.fetchApi('/webapi/entry.cgi', qs);
-    if(response.data.cameras.length === 0 || (response.data.cameras.length > 0 && disconStatus.includes(response.data.cameras[0].status))) {
+    if (response.data.cameras.length === 0 || (response.data.cameras.length > 0
+      && disconStatus.includes(response.data.cameras[0].status))) {
       return false;
     }
 
     return true;
+  }
+
+  async deleteActionRules() {
+    await this.deleteMotionDetectionRule().catch(this.error);
+    await this.deleteEnabledRule().catch(this.error);
+    await this.deleteDisabledRule().catch(this.error);
+    await this.deleteConnectionLostRule().catch(this.error);
+    await this.deleteConnectionNormalRule().catch(this.error);
+  }
+
+  async onWebhookHostChanged() {
+    await this.deleteActionRules().catch(this.error);
+    await this.repairActionRules().catch(this.error);
   }
 
 }

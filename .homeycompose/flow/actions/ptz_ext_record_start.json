@@ -1,13 +1,13 @@
 {
     "title": {
-      "en": "Connection lost",
-      "nl": "Connectie verbroken"
+      "en": "Start Recording",
+      "nl": "Start Opname"
     },
     "args": [
       {
         "type": "device",
         "name": "device",
-        "filter": "driver_id=camera"
+        "filter": "driver_id=ptz-camera"
       }
     ]
   }

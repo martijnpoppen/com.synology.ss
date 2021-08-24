@@ -1,19 +1,19 @@
 {
   "title": {
     "en": "Run Patrol",
-    "nl": "Run Patrol"
+    "nl": "Activeer Patrouille"
   },
   "titleFormatted": { 
     "en": "Run Patrol [[patrol]]",
-    "nl": "Run Patrol [[patrol]]" 
+    "nl": "Activeer Patrouille [[patrol]]" 
   },
   "args": [
     {
       "type": "autocomplete",
       "name": "patrol",
       "placeholder": {
-        "en": "Default",
-        "nl": "Standaard"
+        "en": "Select patrol",
+        "nl": "Selecteer patrouille"
       }
     },
     {

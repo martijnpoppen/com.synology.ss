@@ -50,11 +50,9 @@ module.exports = class CameraDriver extends Homey.Driver {
       await args.device.createSnapshot().catch(this.error);
       return true;
     });
-
-    
   }
 
-  async onPair(session, filter_ptz=false) {
+  async onPair(session, filterPtz = false) {
     let api;
     let stationId;
 
@@ -95,7 +93,7 @@ module.exports = class CameraDriver extends Homey.Driver {
         api: 'SYNO.SurveillanceStation.Camera',
         method: 'List',
         version: 8,
-        basic: true
+        basic: true,
       };
       const apiUrl = await stationDevice.getAPIUrl('/webapi/entry.cgi', qs);
 
@@ -118,23 +116,23 @@ module.exports = class CameraDriver extends Homey.Driver {
           this.log(cam.name);
 
           const ptz = cam.deviceType & 4;
-          const ptzBln = (ptz === 4) ? true:false;
+          const ptzBln = (ptz === 4);
 
-          if(filter_ptz === false || (filter_ptz === true && ptzBln === true)) {
-            
-              // set cameralist
-              const camera = {
-                name: cam.name,
-                data: {
-                  id: cam.id,
-                },
-                store: {
-                  station_id: stationId,
-                  version: this.homey.manifest.version,
-                },
-              };
-              devices.push(camera);
-            }
+          if (filterPtz === false || (filterPtz === true && ptzBln === true)) {
+            // set cameralist
+            const camera = {
+              name: cam.name,
+              data: {
+                id: cam.id,
+                station: stationId,
+              },
+              store: {
+                station_id: stationId,
+                version: this.homey.manifest.version,
+              },
+            };
+            devices.push(camera);
+          }
         });
 
         this.log(devices);
@@ -153,17 +151,21 @@ module.exports = class CameraDriver extends Homey.Driver {
 
     session.setHandler('station', async data => {
       this.log('on station');
+      const deviceData = device.getData();
       const stations = [];
-
       const devices = this.homey.drivers.getDriver('station').getDevices();
 
       Object.keys(devices).forEach(i => {
         const driverDevice = devices[i];
+        const stationId = driverDevice.getData().id;
         const station = {
-          id: driverDevice.getData().id,
+          id: stationId,
           name: driverDevice.getName(),
         };
-        stations.push(station);
+
+        if (deviceData.station === undefined || deviceData.station === '' || deviceData.station === stationId) {
+          stations.push(station);
+        }
       });
 
       return stations;

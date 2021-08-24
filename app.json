@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.synology.ss",
-  "version": "3.4.0",
+  "version": "4.0.0",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "name": {
@@ -40,37 +40,37 @@
   "api": {
     "onCameraMotion": {
       "method": "get",
-      "path": "/motion/:id",
+      "path": "/station/:station/:driver/:id/motion",
       "public": true
     },
     "onCameraEnabled": {
       "method": "get",
-      "path": "/enabled/:id",
+      "path": "/station/:station/:driver/:id/enabled",
       "public": true
     },
     "onCameraDisabled": {
       "method": "get",
-      "path": "/disabled/:id",
-      "public": true
-    },
-    "onStationHomeModeOn": {
-      "method": "get",
-      "path": "/homemode_on/:id",
-      "public": true
-    },
-    "onStationHomeModeOff": {
-      "method": "get",
-      "path": "/homemode_off/:id",
+      "path": "/station/:station/:driver/:id/disabled",
       "public": true
     },
     "onCameraConnectionLost": {
       "method": "get",
-      "path": "/connection_lost/:id",
+      "path": "/station/:station/:driver/:id/connection_lost",
       "public": true
     },
     "onCameraConnectionNormal": {
       "method": "get",
-      "path": "/connection_normal/:id",
+      "path": "/station/:station/:driver/:id/connection_normal",
+      "public": true
+    },
+    "onStationHomeModeOn": {
+      "method": "get",
+      "path": "/station/:station/homemode_on",
+      "public": true
+    },
+    "onStationHomeModeOff": {
+      "method": "get",
+      "path": "/station/:station/homemode_off",
       "public": true
     }
   },
@@ -85,7 +85,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=camera|ptz-camera"
+            "filter": "driver_id=camera"
           }
         ],
         "id": "camera_connection_lost"
@@ -99,7 +99,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=camera|ptz-camera"
+            "filter": "driver_id=camera"
           }
         ],
         "id": "camera_connection_normal"
@@ -113,7 +113,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=camera|ptz-camera"
+            "filter": "driver_id=camera"
           }
         ],
         "id": "camera_disabled"
@@ -127,7 +127,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=camera|ptz-camera"
+            "filter": "driver_id=camera"
           }
         ],
         "id": "camera_enabled"
@@ -159,6 +159,62 @@
           }
         ],
         "id": "home_mode_on"
+      },
+      {
+        "title": {
+          "en": "Connection lost",
+          "nl": "Connectie verbroken"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=ptz-camera"
+          }
+        ],
+        "id": "ptz-camera_connection_lost"
+      },
+      {
+        "title": {
+          "en": "Connection normal",
+          "nl": "Connectie hersteld"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=ptz-camera"
+          }
+        ],
+        "id": "ptz-camera_connection_normal"
+      },
+      {
+        "title": {
+          "en": "Camera Disabled",
+          "nl": "Camera Uitgeschakeld"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=ptz-camera"
+          }
+        ],
+        "id": "ptz-camera_disabled"
+      },
+      {
+        "title": {
+          "en": "Camera Enabled",
+          "nl": "Camera Ingeschakeld"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=ptz-camera"
+          }
+        ],
+        "id": "ptz-camera_enabled"
       }
     ],
     "conditions": [
@@ -171,7 +227,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=camera|ptz-camera"
+            "filter": "driver_id=camera"
           }
         ],
         "id": "is_connected"
@@ -185,10 +241,38 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=camera|ptz-camera"
+            "filter": "driver_id=camera"
           }
         ],
         "id": "is_enabled"
+      },
+      {
+        "title": {
+          "en": "!{{Connected|Disconnected}}",
+          "nl": "!{{Verbonden|Verbinding verbroken}}"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=ptz-camera"
+          }
+        ],
+        "id": "ptz_is_connected"
+      },
+      {
+        "title": {
+          "en": "!{{Enabled|Disabled}}",
+          "nl": "!{{Ingeschakeld|Uitgeschakeld}}"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=ptz-camera"
+          }
+        ],
+        "id": "ptz_is_enabled"
       }
     ],
     "actions": [
@@ -201,7 +285,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=camera|ptz-camera"
+            "filter": "driver_id=camera"
           }
         ],
         "id": "create_snapshot"
@@ -215,7 +299,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=camera|ptz-camera"
+            "filter": "driver_id=camera"
           }
         ],
         "id": "disable_camera"
@@ -229,7 +313,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=camera|ptz-camera"
+            "filter": "driver_id=camera"
           }
         ],
         "id": "enable_camera"
@@ -243,7 +327,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=camera|ptz-camera"
+            "filter": "driver_id=camera"
           }
         ],
         "id": "ext_record_start"
@@ -257,7 +341,7 @@
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=camera|ptz-camera"
+            "filter": "driver_id=camera"
           }
         ],
         "id": "ext_record_stop"
@@ -342,8 +426,78 @@
       },
       {
         "title": {
-          "en": "PTZ Home",
-          "nl": "PTZ Home"
+          "en": "Create Snapshot",
+          "nl": "Maak een snapshot"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=ptz-camera"
+          }
+        ],
+        "id": "ptz_create_snapshot"
+      },
+      {
+        "title": {
+          "en": "Disable",
+          "nl": "Uitschakelen"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=ptz-camera"
+          }
+        ],
+        "id": "ptz_disable_camera"
+      },
+      {
+        "title": {
+          "en": "Enable",
+          "nl": "Inschakelen"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=ptz-camera"
+          }
+        ],
+        "id": "ptz_enable_camera"
+      },
+      {
+        "title": {
+          "en": "Start Recording",
+          "nl": "Start Opname"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=ptz-camera"
+          }
+        ],
+        "id": "ptz_ext_record_start"
+      },
+      {
+        "title": {
+          "en": "Stop Recording",
+          "nl": "Stop Opname"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=ptz-camera"
+          }
+        ],
+        "id": "ptz_ext_record_stop"
+      },
+      {
+        "title": {
+          "en": "PTZ to Home",
+          "nl": "Naar postitie Home"
         },
         "args": [
           {
@@ -357,19 +511,19 @@
       {
         "title": {
           "en": "Run Patrol",
-          "nl": "Run Patrol"
+          "nl": "Activeer Patrouille"
         },
         "titleFormatted": {
           "en": "Run Patrol [[patrol]]",
-          "nl": "Run Patrol [[patrol]]"
+          "nl": "Activeer Patrouille [[patrol]]"
         },
         "args": [
           {
             "type": "autocomplete",
             "name": "patrol",
             "placeholder": {
-              "en": "Default",
-              "nl": "Standaard"
+              "en": "Select patrol",
+              "nl": "Selecteer patrouille"
             }
           },
           {
@@ -383,11 +537,11 @@
       {
         "title": {
           "en": "Set Position",
-          "nl": "Set Position"
+          "nl": "Naar positie"
         },
         "titleFormatted": {
           "en": "Set Position H=[[pos_x]],V=[[pos_y]]",
-          "nl": "Set Position H=[[pos_x]],V=[[pos_y]]"
+          "nl": "Naar positie H=[[pos_x]],V=[[pos_y]]"
         },
         "args": [
           {
@@ -494,7 +648,9 @@
                 "en": "Timeout should be at least 10 seconds. To little could mean the camera could trigger to much motion events.",
                 "nl": "Time-out moet minimaal 10 seconde zijn. Een te lage instelling kan er voor zorgen dat de camera te veel beweging detecteert."
               },
-              "value": 21
+              "value": 21,
+              "min": 10,
+              "max": 60
             }
           ]
         },
@@ -631,7 +787,9 @@
                 "en": "Timeout should be at least 10 seconds. To little could mean the camera could trigger to much motion events.",
                 "nl": "Time-out moet minimaal 10 seconde zijn. Een te lage instelling kan er voor zorgen dat de camera te veel beweging detecteert."
               },
-              "value": 21
+              "value": 21,
+              "min": 10,
+              "max": 60
             }
           ]
         },
@@ -746,7 +904,27 @@
           }
         }
       },
-      "settings": [],
+      "settings": [
+        {
+          "id": "webhook_host",
+          "type": "dropdown",
+          "value": "cloud",
+          "label": "Connection to Homey",
+          "values": [
+            {
+              "id": "cloud",
+              "label": "Cloud URL"
+            },
+            {
+              "id": "local",
+              "label": {
+                "en": "Local IP",
+                "nl": "Lokaal IP"
+              }
+            }
+          ]
+        }
+      ],
       "pair": [
         {
           "id": "api"

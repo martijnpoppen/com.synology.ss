@@ -60,8 +60,8 @@
     "en": "Create snapshot flow action added",
     "nl": "Maken van een snapshot flow-actie toegevoegd"
   },
-  "3.4.0": {
-    "en": "Create camera connection lost/normal triggers",
-    "nl": "Triggers voor connectie verbroken/hersteld toegevoegd"
+  "4.0.0": {
+    "en": "Added camera connection lost/normal triggers + PTZ device and flow actions",
+    "nl": "Triggers voor camera connectie toegevoegd + PTZ ondersteuning"
   }
 }

@@ -7,7 +7,7 @@
       {
         "type": "device",
         "name": "device",
-        "filter": "driver_id=camera|ptz-camera"
+        "filter": "driver_id=camera"
       }
     ]
   }

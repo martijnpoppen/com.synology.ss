@@ -2,7 +2,6 @@
 
 const Homey = require('homey');
 const fetch = require('node-fetch');
-const crypto = require('crypto');
 const AbortController = require('abort-controller');
 const querystring = require('querystring');
 
@@ -63,8 +62,6 @@ module.exports = class StationDriver extends Homey.Driver {
       this.log(api);
       this.log(sid);
       this.log(station);
-      const deviceId = crypto.createHash('md5').update(api.toString()).digest('hex');
-      this.log(deviceId);
 
       let accountEnc = null;
       if (api.store_credentials !== undefined && api.store_credentials === true) {
@@ -72,7 +69,7 @@ module.exports = class StationDriver extends Homey.Driver {
       }
 
       const devices = [{
-        name: station.hostname+' ('+station.DSModelName+')',
+        name: `${station.hostname} (${station.DSModelName})`,
         data: {
           id: station.serial,
         },
@@ -210,9 +207,7 @@ module.exports = class StationDriver extends Homey.Driver {
         }
 
         // result not ok
-        session.emit('station-api-error', message).then(function( result ) {
-          this.log(errData);
-        });
+        session.emit('station-api-error', message).then(this.log);
       });
 
       this.log('response');
@@ -220,29 +215,20 @@ module.exports = class StationDriver extends Homey.Driver {
 
       if (response !== undefined && response.data !== undefined
         && response.data.sid !== undefined) {
-
         // get station details
         const stationInfo = await this.getStationInfo(data, response.data.sid);
 
-        session.emit('station-api-ok', { sid: response.data.sid, did: response.data.did, station: stationInfo }).then(function( result ) {
-          this.log(result);
-        });
+        session.emit('station-api-ok', { sid: response.data.sid, did: response.data.did, station: stationInfo }).then(this.log);
       } else if (response !== undefined) {
         // result not ok
         if (response.error.code === 403) {
-          session.emit('station-api-2fa', '').then(function( result ) {
-            this.log(result);
-          });
+          session.emit('station-api-2fa', '').then(this.log);
         } else {
-          session.emit('station-api-error', this.homey.__('exception.validate_pair_failed')).then(function( result ) {
-            this.log(result);
-          });
+          session.emit('station-api-error', this.homey.__('exception.validate_pair_failed')).then(this.log);
         }
       }
     } catch (error) {
-      session.emit('station-api-error', error.message).then(function( result ) {
-        this.log(result);
-      });
+      session.emit('station-api-error', error.message).then(this.log);
     } finally {
       clearTimeout(timeout);
     }
@@ -264,18 +250,18 @@ module.exports = class StationDriver extends Homey.Driver {
     return decryptedData;
   }
 
-  async getStationInfo(data,sid){
+  async getStationInfo(data, sid) {
     this.log('get station info');
-    const path='/webapi/entry.cgi';
+    const path = '/webapi/entry.cgi';
     const qs = {
       api: 'SYNO.SurveillanceStation.Info',
       method: 'GetInfo',
       version: 8,
-      _sid: sid
+      _sid: sid,
     };
 
     // compile url
-    const apiUrl=`${data.protocol}://${data.host}:${data.port}${path}?${querystring.stringify(qs)}`;
+    const apiUrl = `${data.protocol}://${data.host}:${data.port}${path}?${querystring.stringify(qs)}`;
     this.log(apiUrl);
     const response = await fetch(apiUrl, {
       method: 'GET',
@@ -285,7 +271,7 @@ module.exports = class StationDriver extends Homey.Driver {
       },
     })
       .then(res => {
-          return res.json();
+        return res.json();
       })
       .catch(error => {
         this.log(error);
@@ -294,8 +280,7 @@ module.exports = class StationDriver extends Homey.Driver {
 
     // validate response
     this.log(response);
-    if (response === undefined || response.success === false)
-    {
+    if (response === undefined || response.success === false) {
       throw new Error('Could not get Surveillance Station info');
     } else {
       // this.log(response);

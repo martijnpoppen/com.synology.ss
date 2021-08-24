@@ -1,11 +1,11 @@
 {
     "title": {
       "en": "Set Position",
-      "nl": "Set Position"
+      "nl": "Naar positie"
     },
     "titleFormatted": { 
       "en": "Set Position H=[[pos_x]],V=[[pos_y]]",
-      "nl": "Set Position H=[[pos_x]],V=[[pos_y]]"
+      "nl": "Naar positie H=[[pos_x]],V=[[pos_y]]"
     },
     "args": [
       {

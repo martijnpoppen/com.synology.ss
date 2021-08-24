@@ -64,6 +64,11 @@ class StationDevice extends DeviceBase {
 
     await this.setSettings(newSettings).catch(this.error);
 
+    if (appVersion === '4.0.0') {
+      // delete old action rules
+      await this.deleteHomeModeRules();
+    }
+
     // set version
     this.setStoreValue('version', appVersion)
       .catch(this.error);
@@ -80,6 +85,34 @@ class StationDevice extends DeviceBase {
     });
 
     await this.initCapabilityHomeMode();
+  }
+
+  async onSettings({ oldSettings, newSettings, changedKeys }) {
+    // webhook_host
+    if (changedKeys.includes('webhook_host') === true) {
+      this.deleteHomeModeRules();
+      this.repairActionRules();
+      this.triggerCamerasOnWebhookHostChanged();
+    }
+  }
+
+  getId() {
+    const data = this.getData();
+    return data.id;
+  }
+
+  async getWebhookUrl(eventName) {
+    const stationId = this.getId();
+    let address;
+
+    this.log(this.getSetting('webhook_host'));
+    if (this.getSetting('webhook_host') === 'local') {
+      address = await this.getLocalAddress();
+    } else {
+      address = await this.getCloudAddress();
+    }
+
+    return `${address}/api/app/com.synology.ss/station/${stationId}/${eventName}`;
   }
 
   async getHomeModeRule(state) {
@@ -113,12 +146,8 @@ class StationDevice extends DeviceBase {
 
   async createHomeModeRule(state) {
     this.log(`create home mode rule ${state}`);
-
-    const homeyaddress = await this.getHomeyAddress();
-    const data = this.getData();
-    const deviceApiHomeModeUrl = `${homeyaddress}/api/app/com.synology.ss/homemode_${state}/${data.id}`;
+    const webhookUrl = await this.getWebhookUrl(`homemode_${state}`);
     const evtId = (state === 'on') ? 20 : 21;
-
     const qs = {
       api: 'SYNO.SurveillanceStation.ActionRule',
       method: 'Save',
@@ -130,13 +159,13 @@ class StationDevice extends DeviceBase {
       multiEvtSetting: 0,
       evtMinIntvl: 10,
       events: `[{"evtSrc":4,"evtDsId":0,"evtDevId":0,"evtId":${evtId},"evtItem":-1,"evtTrig":0,"evtWebhookToken":""}]`,
-      actions: `[{"id":-1,"actSrc":1,"actDsId":0,"actDevId":-1,"actId":-1,"actItemId":-1,"actTimes":1,"actTimeUnit":1,"actTimeDur":10,"actRetPos":-2,"extUrl":"${deviceApiHomeModeUrl}","userName":"","password":"","iftttKey":"","iftttEvent":"","param1":"","param2":"","param3":"","webhookReqMethod":0,"httpContentType":0,"httpBody":""}]`,
+      actions: `[{"id":-1,"actSrc":1,"actDsId":0,"actDevId":-1,"actId":-1,"actItemId":-1,"actTimes":1,"actTimeUnit":1,"actTimeDur":10,"actRetPos":-2,"extUrl":"${webhookUrl}","userName":"","password":"","iftttKey":"","iftttEvent":"","param1":"","param2":"","param3":"","webhookReqMethod":0,"httpContentType":0,"httpBody":""}]`,
       actSchedule: '"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"',
     };
 
     await this.fetchApi('/webapi/entry.cgi', qs);
 
-    const ruleHomeMode = await this.getActionRuleHomeMode(deviceApiHomeModeUrl);
+    const ruleHomeMode = await this.getActionRuleHomeMode(webhookUrl);
 
     // save rule id
     this.setStoreValue(`rule_home_mode_${state}`, ruleHomeMode);
@@ -266,9 +295,12 @@ class StationDevice extends DeviceBase {
     }
   }
 
-  async registerCamera(id) {
-    this.log('register camera', id);
-    let cameras = this.getStoreValue('cameras');
+  async registerCamera(id, driver) {
+    this.log('register camera', id, driver);
+
+    const storeKey = (driver === 'ptz-camera') ? 'ptz-cameras' : 'cameras';
+
+    let cameras = this.getStoreValue(storeKey);
 
     if (cameras === null || cameras === undefined) {
       this.log('new array with cameras');
@@ -281,8 +313,34 @@ class StationDevice extends DeviceBase {
 
     this.log(cameras);
 
-    await this.setStoreValue('cameras', cameras)
+    await this.setStoreValue(storeKey, cameras)
       .catch(this.error);
+  }
+
+  async getDevices() {
+    const devices = [];
+    const cameras = await this.getStoreValue('cameras');
+    if (Array.isArray(cameras)) {
+      cameras.forEach(camera => {
+        const device = {
+          id: camera,
+          driver: 'camera',
+        };
+        devices.push(device);
+      });
+    }
+    const ptzCameras = await this.getStoreValue('ptz-cameras');
+    if (Array.isArray(ptzCameras)) {
+      ptzCameras.forEach(ptzCamera => {
+        const device = {
+          id: ptzCamera,
+          driver: 'ptz-camera',
+        };
+        devices.push(device);
+      });
+    }
+
+    return devices;
   }
 
   async onNewSid() {
@@ -290,19 +348,21 @@ class StationDevice extends DeviceBase {
 
     this.setAvailable();
 
-    const cameras = await this.getStoreValue('cameras');
-    if (cameras === null || cameras === undefined || cameras.length === 0) {
+    const devices = this.getDevices();
+    if (devices.length === 0) {
       this.log('no cameras for this station');
       return;
     }
 
-    this.log(cameras);
+    this.log(devices);
 
-    await Promise.all(cameras.map(async cameraId => {
-      this.log(cameraId);
-      const camera = this.homey.drivers.getDriver('camera').getDevice({ id: Number(cameraId) });
-      if (camera !== undefined && camera !== null && !(camera instanceof Error)) {
+    await Promise.all(devices.map(async device => {
+      this.log(device);
+      try {
+        const camera = this.getCamera(device.id, device.driver);
         await camera.onNewSid();
+      } catch (e) {
+        this.log(e);
       }
     }));
   }
@@ -318,19 +378,21 @@ class StationDevice extends DeviceBase {
 
     this.homey.notifications.registerNotification({ excerpt: this.homey.__('exception.authentication_failed') }, (e, n) => { });
 
-    const cameras = await this.getStoreValue('cameras');
-    if (cameras === null || cameras === undefined || cameras.length === 0) {
+    const devices = this.getDevices();
+    if (devices.length === 0) {
       this.log('no cameras for this station');
       return;
     }
 
-    this.log(cameras);
+    this.log(devices);
 
-    await Promise.all(cameras.map(async cameraId => {
-      this.log(cameraId);
-      const camera = this.homey.drivers.getDriver('camera').getDevice({ id: Number(cameraId) });
-      if (camera !== undefined && camera !== null && !(camera instanceof Error)) {
+    await Promise.all(devices.map(async device => {
+      this.log(device);
+      try {
+        const camera = this.getCamera(device.id, device.driver);
         await camera.onSidFail();
+      } catch (e) {
+        this.log(e);
       }
     }));
   }
@@ -381,6 +443,80 @@ class StationDevice extends DeviceBase {
     const successHomeMode = await this.setCapabilityHomeModeRules();
     if (successHomeMode === false) {
       throw new Error('Could not set home mode action rules');
+    }
+  }
+
+  async getInfo() {
+    this.log('get info');
+
+    const qs = {
+      api: 'SYNO.SurveillanceStation.Info',
+      method: 'GetInfo',
+      version: 5,
+    };
+
+    const response = await this.fetchApi('/webapi/entry.cgi', qs);
+
+    if (response.success === false) {
+      throw new Error('Could not get info');
+    }
+
+    return response.data;
+  }
+
+  async triggerCamerasOnWebhookHostChanged() {
+    this.log('trigger cameras on webhook changed');
+
+    const devices = await this.getDevices();
+    if (devices.length === 0) {
+      this.log('no cameras for this station');
+      return;
+    }
+
+    this.log(devices);
+
+    await Promise.all(devices.map(async device => {
+      this.log(device);
+      try {
+        const camera = this.getCamera(device.id, device.driver);
+        await camera.onWebhookHostChanged();
+      } catch (e) {
+        this.log(e);
+      }
+    }));
+  }
+
+  getCamera(id, driver) {
+    this.log('get camera');
+
+    if (driver !== 'camera' && driver !== 'ptz-camera') {
+      this.log(`${driver} is not a driver`);
+      throw new Error(`${driver} is not a driver`);
+    }
+
+    try {
+      const station = this.getId();
+      const camSearchId1 = { id, station };
+      const camSearchId2 = { id };
+      let device;
+
+      try {
+        device = this.homey.drivers.getDriver(driver).getDevice(camSearchId1);
+      } catch (e) {
+        this.log('device not found 1');
+      }
+      try {
+        if (!device) {
+          device = this.homey.drivers.getDriver(driver).getDevice(camSearchId2);
+        }
+      } catch (e) {
+        this.log('device not found 2');
+        throw new Error('device not found');
+      }
+      return device;
+    } catch (e) {
+      this.log(e.error);
+      throw new Error(e);
     }
   }
 

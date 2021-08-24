@@ -24,7 +24,27 @@
       }
     }
   },
-  "settings": [],
+  "settings": [
+    {
+      "id": "webhook_host",
+      "type": "dropdown",
+      "value": "cloud",
+      "label": "Connection to Homey",
+      "values": [
+        {
+          "id": "cloud",
+          "label": "Cloud URL"
+        },
+        {
+          "id": "local",
+          "label": { 
+            "en": "Local IP",
+            "nl": "Lokaal IP"
+           }
+        }
+      ]
+    }
+  ],
   "pair": [
     {
       "id": "api"

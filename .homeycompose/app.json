@@ -1,6 +1,6 @@
 {
   "id": "com.synology.ss",
-  "version": "3.4.0",
+  "version": "4.0.0",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "name": {
@@ -39,37 +39,37 @@
   "api": {
     "onCameraMotion": {
       "method": "get",
-      "path": "/motion/:id",
+      "path": "/station/:station/:driver/:id/motion",
       "public": true
     },
     "onCameraEnabled": {
       "method": "get",
-      "path": "/enabled/:id",
+      "path": "/station/:station/:driver/:id/enabled",
       "public": true
     },
     "onCameraDisabled": {
       "method": "get",
-      "path": "/disabled/:id",
-      "public": true
-    },
-    "onStationHomeModeOn": {
-      "method": "get",
-      "path": "/homemode_on/:id",
-      "public": true
-    },
-    "onStationHomeModeOff": {
-      "method": "get",
-      "path": "/homemode_off/:id",
+      "path": "/station/:station/:driver/:id/disabled",
       "public": true
     },
     "onCameraConnectionLost": {
       "method": "get",
-      "path": "/connection_lost/:id",
+      "path": "/station/:station/:driver/:id/connection_lost",
       "public": true
     },
     "onCameraConnectionNormal": {
       "method": "get",
-      "path": "/connection_normal/:id",
+      "path": "/station/:station/:driver/:id/connection_normal",
+      "public": true
+    },
+    "onStationHomeModeOn": {
+      "method": "get",
+      "path": "/station/:station/homemode_on",
+      "public": true
+    },
+    "onStationHomeModeOff": {
+      "method": "get",
+      "path": "/station/:station/homemode_off",
       "public": true
     }
   }

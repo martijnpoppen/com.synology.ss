@@ -1,183 +1,90 @@
 'use strict';
 
+const { getCamera, getStation } = require('./lib/apihelper');
+
 module.exports = {
   async onCameraMotion({ homey, params }) {
-    homey.app.log('params');
-    homey.app.log(params.id);
-
-    const id = Number(params.id);
-
-    if (Number.isInteger(id) === false) {
-      return 'id is not an int';
-    }
-
+    homey.app.log('on camera motion');
     try {
-      const device = homey.drivers.getDriver('camera').getDevice({ id });
-
-      if (device !== undefined && device !== null && !(device instanceof Error)) {
-        device.onMotion().catch(homey.app.error);
-      } else {
-        homey.app.log('device is not a camera');
-        return 'device is not a camera';
-      }
+      const device = await getCamera(homey, params);
+      device.onMotion().catch(homey.app.error);
     } catch (e) {
-      homey.app.log('no devices found');
-      homey.app.log(e);
-      return 'no devices found';
+      homey.app.log('error', e);
+      homey.app.log(e.error);
+      return e.error;
     }
-
     return 'ok';
   },
   async onCameraEnabled({ homey, params }) {
-    homey.app.log('params');
-    homey.app.log(params.id);
-
-    const id = Number(params.id);
-
-    if (Number.isInteger(id) === false) {
-      return 'id is not an int';
-    }
-
+    homey.app.log('on camera enabled');
     try {
-      const device = homey.drivers.getDriver('camera').getDevice({ id });
-
-      if (device !== undefined && device !== null && !(device instanceof Error)) {
-        device.onCameraEnabled().catch(homey.app.error);
-      } else {
-        homey.app.log('device is not a camera');
-        return 'device is not a camera';
-      }
+      const device = await getCamera(homey, params);
+      device.onCameraEnabled().catch(homey.app.error);
     } catch (e) {
-      homey.app.log('no devices found');
-      homey.app.log(e);
-      return 'no devices found';
+      homey.app.log('error', e);
+      homey.app.log(e.error);
+      return e.error;
     }
-
     return 'ok';
   },
   async onCameraDisabled({ homey, params }) {
-    homey.app.log('params');
-    homey.app.log(params.id);
-
-    const id = Number(params.id);
-
-    if (Number.isInteger(id) === false) {
-      return 'id is not an int';
-    }
-
+    homey.app.log('on camera disabled');
     try {
-      const device = homey.drivers.getDriver('camera').getDevice({ id });
-
-      if (device !== undefined && device !== null && !(device instanceof Error)) {
-        device.onCameraDisabled().catch(homey.app.error);
-      } else {
-        homey.app.log('device is not a camera');
-        return 'device is not a camera';
-      }
+      const device = await getCamera(homey, params);
+      device.onCameraDisabled().catch(homey.app.error);
     } catch (e) {
-      homey.app.log('no devices found');
-      homey.app.log(e);
-      return 'no devices found';
+      homey.app.log('error', e);
+      homey.app.log(e.error);
+      return e.error;
     }
-
     return 'ok';
   },
   async onCameraConnectionLost({ homey, params }) {
-    homey.app.log('params');
-    homey.app.log(params.id);
-
-    const id = Number(params.id);
-
-    if (Number.isInteger(id) === false) {
-      return 'id is not an int';
-    }
-
+    homey.app.log('on camera connection lost');
     try {
-      const device = homey.drivers.getDriver('camera').getDevice({ id });
-
-      if (device !== undefined && device !== null && !(device instanceof Error)) {
-        device.onCameraConnectionLost().catch(homey.app.error);
-      } else {
-        homey.app.log('device is not a camera');
-        return 'device is not a camera';
-      }
+      const device = await getCamera(homey, params);
+      device.onCameraConnectionLost().catch(homey.app.error);
     } catch (e) {
-      homey.app.log('no devices found');
-      homey.app.log(e);
-      return 'no devices found';
+      homey.app.log('error', e);
+      homey.app.log(e.error);
+      return e.error;
     }
-
     return 'ok';
   },
   async onCameraConnectionNormal({ homey, params }) {
-    homey.app.log('params');
-    homey.app.log(params.id);
-
-    const id = Number(params.id);
-
-    if (Number.isInteger(id) === false) {
-      return 'id is not an int';
-    }
-
+    homey.app.log('on camera connection normal');
     try {
-      const device = homey.drivers.getDriver('camera').getDevice({ id });
-
-      if (device !== undefined && device !== null && !(device instanceof Error)) {
-        device.onCameraConnectionNormal().catch(homey.app.error);
-      } else {
-        homey.app.log('device is not a camera');
-        return 'device is not a camera';
-      }
+      const device = await getCamera(homey, params);
+      device.onCameraConnectionNormal().catch(homey.app.error);
     } catch (e) {
-      homey.app.log('no devices found');
-      homey.app.log(e);
-      return 'no devices found';
+      homey.app.log('error', e);
+      homey.app.log(e.error);
+      return e.error;
     }
-
     return 'ok';
   },
   async onStationHomeModeOn({ homey, params }) {
-    homey.app.log('trigger home mode on');
-    homey.app.log('params');
-    homey.app.log(params.id);
-
-    const { id } = params;
-
+    homey.app.log('on station home mode on');
     try {
-      const device = homey.drivers.getDriver('station').getDevice({ id });
-      homey.app.log(device);
-
-      if (device !== undefined && device !== null && !(device instanceof Error)) {
-        device.onHomeModeStatusChange(true).catch(homey.app.error);
-      }
+      const device = await getStation(homey, params);
+      device.onHomeModeStatusChange(true).catch(homey.app.error);
     } catch (e) {
-      homey.app.log('no devices found');
-      homey.app.log(e);
-      return 'no devices found';
+      homey.app.log('error', e);
+      homey.app.log(e.error);
+      return e.error;
     }
-
     return 'ok';
   },
   async onStationHomeModeOff({ homey, params }) {
-    homey.app.log('trigger home mode off');
-    homey.app.log('params');
-    homey.app.log(params.id);
-
-    const { id } = params;
-
+    homey.app.log('on station home mode off');
     try {
-      const device = homey.drivers.getDriver('station').getDevice({ id });
-      homey.app.log(device);
-
-      if (device !== undefined && device !== null && !(device instanceof Error)) {
-        device.onHomeModeStatusChange(false).catch(homey.app.error);
-      }
+      const device = await getStation(homey, params);
+      device.onHomeModeStatusChange(false).catch(homey.app.error);
     } catch (e) {
-      homey.app.log('no devices found');
-      homey.app.log(e);
-      return 'no devices found';
+      homey.app.log('error', e);
+      homey.app.log(e.error);
+      return e.error;
     }
-
     return 'ok';
   },
 };
