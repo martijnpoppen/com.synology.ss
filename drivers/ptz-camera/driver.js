@@ -46,6 +46,9 @@ class PTZCameraDriver extends CameraDriver {
     });
 
     this.homey.flow.getActionCard('ptz_home').registerRunListener(async args => {
+      if(args.device.getCapabilityValue('ptz_home')!==true){
+        throw new Error(this.homey.__('exception.action_not_supported'));
+      }
       const result = await args.device.home().catch(error => {
         throw new Error(error);
       });
@@ -56,6 +59,9 @@ class PTZCameraDriver extends CameraDriver {
     });
 
     this.homey.flow.getActionCard('ptz_autofocus').registerRunListener(async args => {
+      if(args.device.getCapabilityValue('ptz_autofocus')!==true){
+        throw new Error(this.homey.__('exception.action_not_supported'));
+      }
       const result = await args.device.autoFocus().catch(error => {
         throw new Error(error);
       });
@@ -77,10 +83,13 @@ class PTZCameraDriver extends CameraDriver {
     });
 
     this.homey.flow.getActionCard('ptz_setposition').registerRunListener(async args => {
+      if(args.device.getCapabilityValue('ptz_abs')!==true){
+        throw new Error(this.homey.__('exception.action_not_supported'));
+      }
       const result = await args.device.setPosition(args.pos_x, args.pos_y).catch(error => {
         throw new Error(error);
       });
-      if (result === false) {
+      if (result.success === false) {
         throw new Error(this.homey.__('exception.action_failed'));
       }
       return true;
@@ -97,7 +106,7 @@ class PTZCameraDriver extends CameraDriver {
     }).registerArgumentAutocompleteListener(
       'patrol',
       async (query, args) => {
-        const results = [];
+        let results = [];
 
         const result = await args.device.listPatrol();
         if (result.success === false || result.data.patrols.length === 0) {

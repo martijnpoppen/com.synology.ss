@@ -1,0 +1,11 @@
+{
+    "type": "boolean",
+    "title": {
+        "en": "Autofocus action",
+        "nl": "Autofocus actie"
+    },
+    "getable": true,
+    "setable": false,
+    "uiComponent": "sensor",
+    "icon": "/drivers/camera/assets/svg/auto-focus.svg"
+}

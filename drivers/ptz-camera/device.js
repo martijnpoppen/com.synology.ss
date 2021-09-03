@@ -4,6 +4,56 @@ const SynoCameraDevice = require('../camera/device');
 
 class SynoPTZCameraDevice extends SynoCameraDevice {
 
+  async migrate() {
+    const result = await super.migrate();
+    if(result===true) {
+      if (this.hasCapability('ptz_abs') === false) {
+        await this.addCapability('ptz_abs');
+      }
+      if (this.hasCapability('ptz_home') === false) {
+        await this.addCapability('ptz_home');
+      }
+      if (this.hasCapability('ptz_autofocus') === false) {
+        await this.addCapability('ptz_autofocus');
+      }
+    }
+  }
+
+  async setCapabilities(capabilities) {
+    super.setCapabilities(capabilities);
+
+    this.setCapabilityAbs(capabilities);
+    this.setCapabilityHome(capabilities);
+    this.setCapabilityAutofocus(capabilities);
+  }
+
+  async setCapabilityAbs(capabilities) {
+    this.log('set capability abs');
+    if(capabilities.ptzAbs!==undefined && capabilities.ptzAbs===true) {
+      this.setCapabilityValue('ptz_abs',true);
+    } else {
+      this.setCapabilityValue('ptz_abs',false);
+    }
+  }
+
+  async setCapabilityHome(capabilities) {
+    this.log('set capability home');
+    if(capabilities.ptzHome!==undefined && capabilities.ptzHome===true) {
+      this.setCapabilityValue('ptz_home',true);
+    } else {
+      this.setCapabilityValue('ptz_home',false);
+    }
+  }
+
+  async setCapabilityAutofocus(capabilities) {
+    this.log('set capability autofocus');
+    if(capabilities.ptzAutoFocus!==undefined && capabilities.ptzAutoFocus===true) {
+      this.setCapabilityValue('ptz_autofocus',true);
+    } else {
+      this.setCapabilityValue('ptz_autofocus',false);
+    }
+  }
+
   async home() {
     this.log('home');
 
@@ -66,7 +116,7 @@ class SynoPTZCameraDevice extends SynoCameraDevice {
     };
 
     const response = await this.fetchApi('/webapi/entry.cgi', qs);
-    return response.success;
+    return response;
   }
 
   async runPatrol(patrolId) {

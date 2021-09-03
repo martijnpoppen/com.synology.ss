@@ -9,7 +9,10 @@
   },
   "capabilities": [
     "enabled",
-    "button.repair_action_rules"
+    "button.repair_action_rules",
+    "ptz_abs",
+    "ptz_home",
+    "ptz_autofocus"
   ],
   "capabilitiesOptions": {
     "button.repair_action_rules": {

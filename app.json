@@ -750,7 +750,10 @@
       },
       "capabilities": [
         "enabled",
-        "button.repair_action_rules"
+        "button.repair_action_rules",
+        "ptz_abs",
+        "ptz_home",
+        "ptz_autofocus"
       ],
       "capabilitiesOptions": {
         "button.repair_action_rules": {
@@ -998,6 +1001,39 @@
         "en": "Leave Home Mode",
         "nl": "Home Mode Verlaten"
       }
+    },
+    "ptz_abs": {
+      "type": "boolean",
+      "title": {
+        "en": "Absolute Position action",
+        "nl": "Positie actie"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/drivers/camera/assets/svg/position.svg"
+    },
+    "ptz_autofocus": {
+      "type": "boolean",
+      "title": {
+        "en": "Autofocus action",
+        "nl": "Autofocus actie"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/drivers/camera/assets/svg/auto-focus.svg"
+    },
+    "ptz_home": {
+      "type": "boolean",
+      "title": {
+        "en": "Home action",
+        "nl": "Thuis actie"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/drivers/camera/assets/svg/home.svg"
     }
   }
 }

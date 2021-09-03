@@ -44,7 +44,7 @@ class SynoCameraDevice extends DeviceBase {
 
     if (appVersion === deviceVersion) {
       // same version, no migration
-      return true;
+      return false;
     }
 
     // switch class to sensor
@@ -956,6 +956,39 @@ class SynoCameraDevice extends DeviceBase {
     this.driver.triggerCameraConnectionNormal(this, {}, {});
   }
 
+  async getCapabilities(){
+    this.log('get capabilities');
+    
+    const id = this.getId();
+    const qs = {
+      api: 'SYNO.SurveillanceStation.Camera',
+      method: 'GetCapabilityByCamId',
+      cameraId: id,
+      version: 8,
+    };
+
+    const response = await this.fetchApi('/webapi/entry.cgi', qs);
+    if(response !== undefined && response.success === true) {
+      return response.data;
+    } else {
+      throw new Error('could not get capabilities');
+    }
+  }
+
+  async initCapabilities() {
+    this.log('init capabilities');
+
+    const capabilities = await this.getCapabilities();
+    await this.setCapabilities(capabilities);
+  }
+
+  async setCapabilities(capabilities) {
+    this.log('set capabilities');
+
+    await this.initCapabilityMotionAlarm();
+    await this.initCapabilityEnabled();
+  }
+
   async onStationReady() {
     this.log('on station ready');
 
@@ -964,8 +997,7 @@ class SynoCameraDevice extends DeviceBase {
     await this.syncConnectionLostRule();
     await this.syncConnectionNormalRule();
 
-    await this.initCapabilityMotionAlarm();
-    await this.initCapabilityEnabled();
+    await this.initCapabilities();
 
     this.registerCapabilityListener('button.repair_action_rules', async () => {
       await this.repairActionRules();

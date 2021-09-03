@@ -1,0 +1,11 @@
+{
+    "type": "boolean",
+    "title": { 
+        "en": "Absolute Position action",
+        "nl": "Positie actie"
+    },
+    "getable": true,
+    "setable": false,
+    "uiComponent": "sensor",
+    "icon": "/drivers/camera/assets/svg/position.svg"
+}

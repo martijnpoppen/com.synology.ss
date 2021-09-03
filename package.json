@@ -1,7 +1,7 @@
 {
   "name": "com.synology.ss",
   "license": "SEE LICENSE IN LICENSE",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/marcschut002/athom.com.synology.ss.git"

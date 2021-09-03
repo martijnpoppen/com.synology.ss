@@ -1,0 +1,11 @@
+{
+    "type": "boolean",
+    "title": { 
+        "en": "Home action",
+        "nl": "Thuis actie"
+    },
+    "getable": true,
+    "setable": false,
+    "uiComponent": "sensor",
+    "icon": "/drivers/camera/assets/svg/home.svg"
+}
