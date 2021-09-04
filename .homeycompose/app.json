@@ -1,6 +1,6 @@
 {
   "id": "com.synology.ss",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "name": {
@@ -9,7 +9,7 @@
   "brandColor": "#333333",
   "description": {
     "en": "Adds support for camera's available in Synology Surveillance Station",
-    "nl": "Ondersteund Synology Surveillance Station camera's"
+    "nl": "Ondersteunt Synology Surveillance Station camera's"
   },
   "contributing": {
     "donate": {

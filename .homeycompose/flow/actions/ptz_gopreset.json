@@ -1,0 +1,25 @@
+{
+  "title": {
+    "en": "Go to Preset",
+    "nl": "Ga naar vooraf ingestelde positie"
+  },
+  "titleFormatted": { 
+    "en": "Go to Preset [[preset]]",
+    "nl": "Ga naar vooraf ingestelde positie [[preset]]" 
+  },
+  "args": [
+    {
+      "type": "autocomplete",
+      "name": "preset",
+      "placeholder": {
+        "en": "Select preset",
+        "nl": "Selecteer positie"
+      }
+    },
+    {
+      "type": "device",
+      "name": "device",
+      "filter": "driver_id=ptz-camera"
+    }
+  ]
+}

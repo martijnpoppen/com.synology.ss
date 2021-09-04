@@ -120,7 +120,7 @@ class SynoPTZCameraDevice extends SynoCameraDevice {
   }
 
   async runPatrol(patrolId) {
-    this.log('go preset');
+    this.log('run patrol');
 
     const data = this.getData();
     const qs = {
@@ -148,6 +148,37 @@ class SynoPTZCameraDevice extends SynoCameraDevice {
 
     const response = await this.fetchApi('/webapi/entry.cgi', qs);
     return response;
+  }
+
+  async listPreset() {
+    this.log('list preset');
+
+    const data = this.getData();
+    const qs = {
+      api: 'SYNO.SurveillanceStation.PTZ',
+      method: 'ListPreset',
+      cameraId: data.id,
+      version: 1,
+    };
+
+    const response = await this.fetchApi('/webapi/entry.cgi', qs);
+    return response;
+  }
+
+  async goPreset(presetId) {
+    this.log('go preset');
+
+    const data = this.getData();
+    const qs = {
+      api: 'SYNO.SurveillanceStation.PTZ',
+      method: 'GoPreset',
+      cameraId: data.id,
+      presetId,
+      version: 1,
+    };
+
+    const response = await this.fetchApi('/webapi/entry.cgi', qs);
+    return response.success;
   }
 
 }

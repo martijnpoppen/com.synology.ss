@@ -128,6 +128,40 @@ class PTZCameraDriver extends CameraDriver {
         });
       },
     );
+
+    this.homey.flow.getActionCard('ptz_gopreset').registerRunListener(async args => {
+      const result = await args.device.goPreset(args.preset).catch(error => {
+        throw new Error(error);
+      });
+      if (result === false) {
+        throw new Error(this.homey.__('exception.action_failed'));
+      }
+      return true;
+    }).registerArgumentAutocompleteListener(
+      'preset',
+      async (query, args) => {
+        let results = [];
+
+        const result = await args.device.listPreset();
+        if (result.success === false || result.data.presets.length === 0) {
+          return results;
+        }
+
+        Object.keys(result.data.presets).forEach(i => {
+          const presetData = result.data.presets[i];
+          const preset = {
+            id: presetData.id,
+            name: presetData.name,
+          };
+          results.push(preset);
+        });
+
+        // filter based on the query
+        return results.filter(res => {
+          return res.name.toLowerCase().includes(query.toLowerCase());
+        });
+      },
+    );
   }
 
   async onPair(session) {

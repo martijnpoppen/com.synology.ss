@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.synology.ss",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "name": {
@@ -10,7 +10,7 @@
   "brandColor": "#333333",
   "description": {
     "en": "Adds support for camera's available in Synology Surveillance Station",
-    "nl": "Ondersteund Synology Surveillance Station camera's"
+    "nl": "Ondersteunt Synology Surveillance Station camera's"
   },
   "contributing": {
     "donate": {
@@ -493,6 +493,32 @@
           }
         ],
         "id": "ptz_ext_record_stop"
+      },
+      {
+        "title": {
+          "en": "Go to Preset",
+          "nl": "Ga naar vooraf ingestelde positie"
+        },
+        "titleFormatted": {
+          "en": "Go to Preset [[preset]]",
+          "nl": "Ga naar vooraf ingestelde positie [[preset]]"
+        },
+        "args": [
+          {
+            "type": "autocomplete",
+            "name": "preset",
+            "placeholder": {
+              "en": "Select preset",
+              "nl": "Selecteer positie"
+            }
+          },
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=ptz-camera"
+          }
+        ],
+        "id": "ptz_gopreset"
       },
       {
         "title": {
