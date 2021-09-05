@@ -71,5 +71,9 @@
   "4.0.2": {
     "en": "Added camera connection lost/normal triggers + PTZ device and flow actions",
     "nl": "Triggers voor camera connectie toegevoegd + PTZ ondersteuning"
+  },
+  "4.0.3": {
+    "en": "Added camera connection lost/normal triggers + PTZ device and flow actions",
+    "nl": "Triggers voor camera connectie toegevoegd + PTZ ondersteuning"
   }
 }

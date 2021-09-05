@@ -96,7 +96,7 @@ class PTZCameraDriver extends CameraDriver {
     });
 
     this.homey.flow.getActionCard('ptz_runpatrol').registerRunListener(async args => {
-      const result = await args.device.runPatrol(args.patrol).catch(error => {
+      const result = await args.device.runPatrol(args.patrol.id).catch(error => {
         throw new Error(error);
       });
       if (result === false) {
@@ -130,7 +130,7 @@ class PTZCameraDriver extends CameraDriver {
     );
 
     this.homey.flow.getActionCard('ptz_gopreset').registerRunListener(async args => {
-      const result = await args.device.goPreset(args.preset).catch(error => {
+      const result = await args.device.goPreset(args.preset.id).catch(error => {
         throw new Error(error);
       });
       if (result === false) {
