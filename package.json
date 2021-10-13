@@ -1,7 +1,7 @@
 {
   "name": "com.synology.ss",
   "license": "SEE LICENSE IN LICENSE",
-  "version": "4.0.3",
+  "version": "4.0.4",
   "repository": {
     "type": "git",
     "url": "https://github.com/marcschut002/athom.com.synology.ss.git"
@@ -15,8 +15,8 @@
   },
   "devDependencies": {
     "eslint": "^7.0.0",
-    "eslint-config-athom": "^2.0.0",
-    "homey": "^2.10.0"
+    "eslint-config-athom": "^3.0.0",
+    "homey": "^2.23.0"
   },
   "engines": {
     "node": ">=12.16.1"

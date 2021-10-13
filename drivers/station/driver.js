@@ -12,12 +12,12 @@ module.exports = class StationDriver extends Homey.Driver {
     this._flowTriggerHomeModeOff = this.homey.flow.getDeviceTriggerCard('home_mode_off');
 
     this.homey.flow.getActionCard('home_mode_on').registerRunListener(async args => {
-      await args.station.setHomeMode(true);
+      await args.device.setHomeMode(true);
       return true;
     });
 
     this.homey.flow.getActionCard('home_mode_off').registerRunListener(async args => {
-      await args.station.setHomeMode(false);
+      await args.device.setHomeMode(false);
       return true;
     });
   }
