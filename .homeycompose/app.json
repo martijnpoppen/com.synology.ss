@@ -1,10 +1,10 @@
 {
   "id": "com.synology.ss",
-  "version": "4.0.4",
+  "version": "4.1.0",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "name": {
-    "en": "Surveillance Station 2"
+    "en": "Synology Surveillance Station 2"
   },
   "brandColor": "#000000",
   "description": {
@@ -30,7 +30,9 @@
       "Security"
     ]
   },
-  "category": ["security"],
+  "category": [
+    "security"
+  ],
   "images": {
     "large": "/assets/images/large.png",
     "small": "/assets/images/small.png"

@@ -79,5 +79,8 @@
   "4.0.4": {
     "en": "Fix for Home Mode action flow",
     "nl": "Oplossing voor Home Mode actie flowcard"
+  },
+  "4.1.0": {
+    "en": "NEW: Developer change - Update app page"
   }
 }
