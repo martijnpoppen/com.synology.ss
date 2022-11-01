@@ -1,24 +1,13 @@
 {
   "name": "com.synology.ss",
-  "license": "SEE LICENSE IN LICENSE",
   "version": "4.0.4",
   "repository": {
     "type": "git",
-    "url": "https://github.com/marcschut002/athom.com.synology.ss.git"
+    "url": "https://github.com/martijnpoppen/com.synology.ss.git"
   },
   "dependencies": {
     "abort-controller": "^3.0.0",
-    "homey-log": "^2.0.1",
     "node-fetch": "^2.6.1",
-    "node-gzip": "^1.1.2",
     "qs": "^6.9.6"
-  },
-  "devDependencies": {
-    "eslint": "^7.0.0",
-    "eslint-config-athom": "^3.0.0",
-    "homey": "^2.23.0"
-  },
-  "engines": {
-    "node": ">=12.16.1"
   }
 }

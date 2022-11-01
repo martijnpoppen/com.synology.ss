@@ -6,36 +6,78 @@
   "name": {
     "en": "Surveillance Station 2"
   },
-  "brandColor": "#333333",
+  "brandColor": "#000000",
   "description": {
     "en": "Adds support for camera's available in Synology Surveillance Station",
     "nl": "Ondersteunt Synology Surveillance Station camera's"
   },
-  "contributing": {
-    "donate": {
-      "paypal": {
-        "username": "marcschut"
-      }
-    }
+  "tags": {
+    "en": [
+      "NAS",
+      "Storage",
+      "FTP",
+      "Webdav",
+      "Surveillance",
+      "Photo",
+      "Video",
+      "WOL",
+      "Wake on Lan",
+      "PTZ",
+      "Video",
+      "RTSP",
+      "RSTP",
+      "Streaming",
+      "Security"
+    ]
   },
-  "bugs": {
-    "url": "https://github.com/marcschut002/athom.com.synology.ss/issues"
-  },
-  "source": "https://github.com/marcschut002/athom.com.synology.ss",
-  "homepage": "https://github.com/marcschut002/athom.com.synology.ss",
-  "homeyCommunityTopicId": 32737,
-  "category": [
-    "security"
-  ],
-  "permissions": [],
+  "category": ["security"],
   "images": {
     "large": "/assets/images/large.png",
     "small": "/assets/images/small.png"
   },
   "author": {
-    "name": "Marc Schut",
-    "email": "marcschut@icloud.com"
+    "name": "Martijn Poppen",
+    "email": "synology@martijnpoppen.nl"
   },
+  "contributors": {
+    "developers": [
+      {
+        "name": "Martijn Poppen",
+        "email": "synology@martijnpoppen.nl"
+      },
+      {
+        "name": "Marc Schut",
+        "email": "marcschut@icloud.com"
+      }
+    ],
+    "translators": [
+      {
+        "name": "🇬🇧 Martijn Poppen"
+      },
+      {
+        "name": "🇳🇱 Martijn Poppen"
+      },
+      {
+        "name": "🇩🇪 Dirk Göbel"
+      }
+    ]
+  },
+  "contributing": {
+    "donate": {
+      "paypal": {
+        "username": "martijnpoppen"
+      },
+      "bunq": {
+        "username": "martijnpoppen"
+      }
+    }
+  },
+  "bugs": {
+    "url": "https://community.homey.app/t/app-pro-surveillance-station-2/71552"
+  },
+  "source": "https://github.com/martijnpoppen/athom.com.synology.ss",
+  "homeyCommunityTopicId": 71552,
+  "support": "https://community.homey.app/t/app-pro-surveillance-station-2/71552",
   "api": {
     "onCameraMotion": {
       "method": "get",
