@@ -1,7 +1,7 @@
 'use strict';
 
 const Homey = require('homey');
-const fetch = require('node-fetch');
+const { Agent, fetch } =  require('undici');
 const AbortController = require('abort-controller');
 const querystring = require('querystring');
 
@@ -192,6 +192,11 @@ module.exports = class StationDriver extends Homey.Driver {
         },
         body: params,
         signal: controller.signal,
+        dispatcher: new Agent({
+            connect: {
+                rejectUnauthorized: false,
+            }
+        })
       }).then(res => {
         return res.json();
       }).then(json => {
@@ -269,6 +274,11 @@ module.exports = class StationDriver extends Homey.Driver {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
+      dispatcher: new Agent({
+        connect: {
+            rejectUnauthorized: false,
+        }
+    })
     })
       .then(res => {
         return res.json();
