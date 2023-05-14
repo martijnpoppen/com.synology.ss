@@ -98,4 +98,4 @@ build/
 
 # Added by Homey CLI
 /.homeybuild/
-app.json
+
