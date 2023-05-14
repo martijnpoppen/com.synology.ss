@@ -82,5 +82,8 @@
   },
   "4.1.0": {
     "en": "NEW: Developer change - Update app page"
+  },
+  "4.1.1": {
+    "en": "FIX: self signed certificate"
   }
 }
