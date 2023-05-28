@@ -1,7 +1,8 @@
 'use strict';
 
 const Homey = require('homey');
-const { Agent, fetch } =  require('undici');
+const fetch = require('node-fetch');
+const https = require('https');
 
 module.exports = class CameraDriver extends Homey.Driver {
 
@@ -104,11 +105,9 @@ module.exports = class CameraDriver extends Homey.Driver {
           'Content-Type': 'application/json',
           Accept: 'application/json',
         },
-        dispatcher: new Agent({
-        connect: {
+        agent: new https.Agent({
             rejectUnauthorized: false,
-        }
-    })
+        })
       }).then(res => {
         return res.json();
       }).then(json => {

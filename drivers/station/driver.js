@@ -1,7 +1,8 @@
 'use strict';
 
 const Homey = require('homey');
-const { Agent, fetch } =  require('undici');
+const fetch = require('node-fetch');
+const https = require('https');
 const AbortController = require('abort-controller');
 const querystring = require('querystring');
 
@@ -184,6 +185,7 @@ module.exports = class StationDriver extends Homey.Driver {
       controller.abort();
     }, 25000);
 
+
     try {
       const response = await fetch(url, {
         method: 'POST',
@@ -192,10 +194,8 @@ module.exports = class StationDriver extends Homey.Driver {
         },
         body: params,
         signal: controller.signal,
-        dispatcher: new Agent({
-            connect: {
-                rejectUnauthorized: false,
-            }
+        agent: new https.Agent({
+            rejectUnauthorized: false,
         })
       }).then(res => {
         return res.json();
@@ -274,10 +274,8 @@ module.exports = class StationDriver extends Homey.Driver {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-      dispatcher: new Agent({
-        connect: {
-            rejectUnauthorized: false,
-        }
+      agent: new https.Agent({
+        rejectUnauthorized: false,
     })
     })
       .then(res => {
