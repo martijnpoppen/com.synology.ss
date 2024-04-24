@@ -9,7 +9,8 @@
   },
   "args": [
     {
-      "type": "autocomplete",
+          "type": "autocomplete",
+    "required": false,
       "name": "preset",
       "placeholder": {
         "en": "Select preset",

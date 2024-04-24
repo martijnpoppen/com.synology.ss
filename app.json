@@ -549,7 +549,8 @@
         },
         "args": [
           {
-            "type": "autocomplete",
+                "type": "autocomplete",
+    "required": false,
             "name": "preset",
             "placeholder": {
               "en": "Select preset",
@@ -589,7 +590,8 @@
         },
         "args": [
           {
-            "type": "autocomplete",
+                "type": "autocomplete",
+    "required": false,
             "name": "patrol",
             "placeholder": {
               "en": "Select patrol",
