@@ -399,6 +399,50 @@ class SynoCameraDevice extends DeviceBase {
     });
   }
 
+  async setVideo() {
+        try {
+            const video = await this.homey.videos.createVideoRTSP();
+            const data = this.getData();
+            const qs1 = {
+                api: 'SYNO.SurveillanceStation.Camera',
+                method: 'Save',
+                version: 9,
+                id: data.id,
+                rtspPathTimeout: 1
+            };
+
+            await this.fetchApi('/webapi/entry.cgi', qs1); // enable RTSP
+            
+
+            video.registerVideoUrlListener(async () => {
+                this.log(`[Device] ${this.getName()} - setVideo registerVideoUrlListener`);
+
+                this.log('get stream url');
+
+                const data = this.getData();
+
+                const qs = {
+                    api: 'SYNO.SurveillanceStation.Camera',
+                    method: 'GetStmUrlPath',
+                    cameraIds: data.id,
+                    version: 8
+                };
+
+                const response = await this.fetchApi('/webapi/entry.cgi', qs);
+                const urlPaths = response.data && response.data.pathInfos;
+                const urlPath = urlPaths && urlPaths.length && urlPaths[0];
+                const rtspUrl = urlPath ? urlPath.unicastPath : 'Could_not_get_RTSP_url';
+
+                this.log(`[Device] ${this.getName()} - setvideo registerVideoUrlListener - request url for native RTSP`, rtspUrl);
+                return { url: rtspUrl };
+            });
+
+            await this.setCameraVideo('main', 'Live', video);
+        } catch (err) {
+            this.homey.app.error(err);
+        }
+    }
+
   async onSettings({ oldSettings, newSettings, changedKeys }) {
     this.log('onSettings');
     this.log(oldSettings);
@@ -843,6 +887,7 @@ class SynoCameraDevice extends DeviceBase {
   async onNewSid() {
     this.log('camera on new sid');
     await this.setImage();
+    await this.setVideo();
     this.setAvailable().catch(this.error);
   }
 
@@ -1004,6 +1049,7 @@ class SynoCameraDevice extends DeviceBase {
     });
 
     await this.setImage();
+    await this.setVideo();
 
     await this.setCurrentState()
       .then(() => {

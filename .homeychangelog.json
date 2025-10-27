@@ -88,5 +88,11 @@
   },
   "4.1.2": {
     "en": "FIX: snapshot in combination with  Unauthorized Certs"
+  },
+  "4.2.0": {
+    "en": "NEW: add video streaming support"
+  },
+  "4.2.1": {
+    "en": "FIX: small fix for disconnect"
   }
 }
