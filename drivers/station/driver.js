@@ -6,6 +6,8 @@ const https = require('https');
 const AbortController = require('abort-controller');
 const querystring = require('querystring');
 
+const DEVICE_NAME = 'Homey';
+
 module.exports = class StationDriver extends Homey.Driver {
 
   onInit() {
@@ -60,8 +62,6 @@ module.exports = class StationDriver extends Homey.Driver {
 
     session.setHandler('list_devices', async data => {
       this.log(data);
-      this.log(api);
-      this.log(sid);
       this.log(station);
 
       let accountEnc = null;
@@ -92,7 +92,6 @@ module.exports = class StationDriver extends Homey.Driver {
     });
 
     session.setHandler('sid', async data => {
-      this.log(data);
       this.log('sid-pair');
 
       sid = data.sid;
@@ -125,8 +124,6 @@ module.exports = class StationDriver extends Homey.Driver {
 
     session.setHandler('sid', async data => {
       this.log('sid');
-      this.log(data);
-      this.log(api);
 
       this.log('save host and sid to device');
 
@@ -159,7 +156,10 @@ module.exports = class StationDriver extends Homey.Driver {
 
   async validateAPI(session, data) {
     this.log('validateAPI');
-    this.log(data);
+    // never log the full data object: it holds the password and 2FA code
+    this.log(`${data.protocol}://${data.host}:${data.port} (2FA code: ${data.otp_code ? 'yes' : 'no'})`);
+
+    const otpSent = data.otp_code !== undefined && data.otp_code !== null && `${data.otp_code}`.trim().length > 0;
 
     const params = new URLSearchParams();
     params.append('api', 'SYNO.API.Auth');
@@ -171,9 +171,11 @@ module.exports = class StationDriver extends Homey.Driver {
     params.append('format', 'sid');
 
     // one time password
-    if (data.otp_code !== undefined && data.otp_code.length > 0) {
-      params.append('otp_code', data.otp_code);
+    if (otpSent) {
+      params.append('otp_code', `${data.otp_code}`.trim());
+      // DSM 7 needs a device name to issue a trusted device token (did)
       params.append('enable_device_token', 'yes');
+      params.append('device_name', DEVICE_NAME);
     }
 
     const url = `${data.protocol}://${data.host}:${data.port}/webapi/auth.cgi`;
@@ -216,20 +218,27 @@ module.exports = class StationDriver extends Homey.Driver {
       });
 
       this.log('response');
-      this.log(response);
+      this.log(this.redactResponse(response));
 
-      if (response !== undefined && response.data !== undefined
+      if (response !== undefined && response !== null && response.data !== undefined
         && response.data.sid !== undefined) {
+        if (otpSent && !response.data.did) {
+          this.log('2FA login succeeded but DSM returned no device token (did)');
+        }
+
         // get station details
         const stationInfo = await this.getStationInfo(data, response.data.sid);
 
         session.emit('station-api-ok', { sid: response.data.sid, did: response.data.did, station: stationInfo }).then(this.log);
-      } else if (response !== undefined) {
+      } else if (response !== undefined && response !== null) {
         // result not ok
-        if (response.error.code === 403) {
+        const code = response.error && response.error.code;
+        this.log('Login error code', code);
+
+        if (code === 403 && !otpSent) {
           session.emit('station-api-2fa', '').then(this.log);
         } else {
-          session.emit('station-api-error', this.homey.__('exception.validate_pair_failed')).then(this.log);
+          session.emit('station-api-error', this.getLoginErrorMessage(code, otpSent)).then(this.log);
         }
       }
     } catch (error) {
@@ -237,6 +246,48 @@ module.exports = class StationDriver extends Homey.Driver {
     } finally {
       clearTimeout(timeout);
     }
+  }
+
+  getLoginErrorMessage(code, otpSent) {
+    switch (code) {
+      case 400:
+        return this.homey.__('exception.login_invalid_credentials');
+      case 401:
+      case 402:
+        return this.homey.__('exception.login_account_disabled');
+      case 403:
+        // a code was sent but DSM still asks for 2-step verification
+        return otpSent
+          ? this.homey.__('exception.login_2fa_not_accepted')
+          : this.homey.__('exception.validate_pair_failed');
+      case 404:
+        return this.homey.__('exception.login_2fa_invalid_code');
+      case 406:
+        return this.homey.__('exception.login_2fa_enforced');
+      case 407:
+        return this.homey.__('exception.login_blocked');
+      case 408:
+      case 409:
+      case 410:
+        return this.homey.__('exception.login_password_expired');
+      default:
+        return code !== undefined
+          ? `${this.homey.__('exception.validate_pair_failed')} (${code})`
+          : this.homey.__('exception.validate_pair_failed');
+    }
+  }
+
+  redactResponse(response) {
+    if (!response || !response.data) return response;
+    return {
+      ...response,
+      data: {
+        ...response.data,
+        sid: response.data.sid ? '<redacted>' : response.data.sid,
+        did: response.data.did ? '<redacted>' : response.data.did,
+        synotoken: response.data.synotoken ? '<redacted>' : response.data.synotoken,
+      },
+    };
   }
 
   async getEncryptedAccount(account, password) {

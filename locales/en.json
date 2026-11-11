@@ -70,6 +70,13 @@
     "no_station_found": "No Surveillance Station found, please click on repair and connect to your station.",
     "action_unsupported": "Action not supported for this device",
     "action_failed": "Action failed",
-    "action_not_supported": "This camera does not support this action"
+    "action_not_supported": "This camera does not support this action",
+    "login_invalid_credentials": "Login failed: the username or password is incorrect",
+    "login_account_disabled": "Login failed: this account is disabled or has no permission to sign in",
+    "login_2fa_not_accepted": "Your Synology still asks for 2-step verification after the code was sent. Homey only supports 6-digit authenticator app codes. If your account uses Secure SignIn (approve sign-in) or a hardware security key, add an authenticator app (OTP) as a 2-step verification method in DSM and try again.",
+    "login_2fa_invalid_code": "The 2-step verification code is incorrect or expired. Please try again with a new code, and make sure the time on your Synology is correct.",
+    "login_2fa_enforced": "2-step verification is required for this account but is not set up yet. Sign in to DSM once to set it up, then try again.",
+    "login_blocked": "Login blocked: this IP address was blocked by your Synology after too many failed attempts. Unblock it in DSM (Control Panel > Security > Protection) and try again.",
+    "login_password_expired": "Login failed: the password has expired or must be changed. Sign in to DSM to change it, then try again."
   }
 }
