@@ -70,6 +70,13 @@
     "no_station_found": "Geen Surveillance Station gevonden, klik op repareren en selecteer je Surveillance Station",
     "action_unsupported": "Deze actie wordt niet ondersteund door dit apparaat.",
     "action_failed": "Actie gefaald",
-    "action_not_supported": "Deze actie wordt niet door deze camera ondersteund."
+    "action_not_supported": "Deze actie wordt niet door deze camera ondersteund.",
+    "login_invalid_credentials": "Inloggen mislukt: de gebruikersnaam of het wachtwoord is onjuist",
+    "login_account_disabled": "Inloggen mislukt: dit account is uitgeschakeld of mag niet inloggen",
+    "login_2fa_not_accepted": "Je Synology vraagt nog steeds om 2-staps verificatie nadat de code is verstuurd. Homey ondersteunt alleen 6-cijferige codes van een authenticator-app. Gebruikt je account Secure SignIn (aanmelding goedkeuren) of een hardwarebeveiligingssleutel, voeg dan in DSM een authenticator-app (OTP) toe als 2-staps verificatiemethode en probeer het opnieuw.",
+    "login_2fa_invalid_code": "De 2-staps verificatiecode is onjuist of verlopen. Probeer het opnieuw met een nieuwe code en controleer of de tijd op je Synology klopt.",
+    "login_2fa_enforced": "2-staps verificatie is verplicht voor dit account maar nog niet ingesteld. Log eenmalig in op DSM om het in te stellen en probeer het opnieuw.",
+    "login_blocked": "Inloggen geblokkeerd: dit IP-adres is door je Synology geblokkeerd na te veel mislukte pogingen. Deblokkeer het in DSM (Configuratiescherm > Beveiliging > Bescherming) en probeer het opnieuw.",
+    "login_password_expired": "Inloggen mislukt: het wachtwoord is verlopen of moet worden gewijzigd. Log in op DSM om het te wijzigen en probeer het opnieuw."
   }
 }
