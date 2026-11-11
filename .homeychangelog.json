@@ -94,5 +94,8 @@
   },
   "4.2.1": {
     "en": "FIX: small fix for disconnect"
+  },
+  "4.2.2": {
+    "en": "FIX: 2FA login feedback and trusted device token"
   }
 }
