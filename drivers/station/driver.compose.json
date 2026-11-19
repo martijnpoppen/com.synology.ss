@@ -11,6 +11,9 @@
     "home_mode",
     "button.repair_action_rules"
   ],
+  "connectivity": [
+    "lan"
+  ],
   "capabilitiesOptions": {
     "button.repair_action_rules": {
       "maintenanceAction": true,

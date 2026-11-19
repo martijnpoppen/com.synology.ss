@@ -14,6 +14,9 @@
     "ptz_home",
     "ptz_autofocus"
   ],
+  "connectivity": [
+    "lan"
+  ],
   "capabilitiesOptions": {
     "button.repair_action_rules": {
       "maintenanceAction": true,
