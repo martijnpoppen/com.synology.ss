@@ -97,5 +97,8 @@
   },
   "4.2.2": {
     "en": "FIX: 2FA login feedback and trusted device token"
+  },
+  "4.2.3": {
+    "en": "FIX: cameras show no image or live stream after repairing station and cameras"
   }
 }
