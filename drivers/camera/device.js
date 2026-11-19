@@ -12,7 +12,10 @@ class SynoCameraDevice extends DeviceBase {
     this.log('init device');
 
     this.snapshot = null;
+    this.video = null;
     this.motion_timer = null;
+    this.repairListenerRegistered = false;
+    this.enabledListenerRegistered = false;
 
     this.setUnavailable(this.homey.__('exception.initializing')).catch(this.error);
 
@@ -94,7 +97,9 @@ class SynoCameraDevice extends DeviceBase {
         this.log('stop timer, station is ready');
         // finish
         clearInterval(intVal);
-        this.onStationReady();
+        this.onStationReady().catch(err => {
+          this.error('on station ready failed', err);
+        });
       } else if (timer > 60) {
         // timeout
         this.log('stop timer, timeout');
@@ -283,15 +288,18 @@ class SynoCameraDevice extends DeviceBase {
       await this.addCapability('enabled').catch(this.error);
 
       // listener
-      await this.registerCapabilityListener('enabled', async value => {
-        this.log(`set enabled: ${value.toString()}`);
-        if (value === true) {
-          this.enableCamera();
-        } else {
-          this.disableCamera();
-        }
-        return true;
-      });
+      if (this.enabledListenerRegistered === false) {
+        this.registerCapabilityListener('enabled', async value => {
+          this.log(`set enabled: ${value.toString()}`);
+          if (value === true) {
+            this.enableCamera();
+          } else {
+            this.disableCamera();
+          }
+          return true;
+        });
+        this.enabledListenerRegistered = true;
+      }
 
       return true;
     } if ((ruleEnabledSuccess === false || ruleDisabledSuccess === false) && this.hasCapability('enabled') === true) {
@@ -391,6 +399,11 @@ class SynoCameraDevice extends DeviceBase {
 
       const res = await this.fetchApi('/webapi/entry.cgi', qs);
 
+      if (!res || !res.body || typeof res.body.pipe !== 'function') {
+        this.log('no image returned', res && res.error ? res.error.code : res);
+        throw new Error(this.homey.__('exception.image_failed'));
+      }
+
       try {
         res.body.pipe(stream);
       } catch (e) {
@@ -401,7 +414,6 @@ class SynoCameraDevice extends DeviceBase {
 
   async setVideo() {
         try {
-            const video = await this.homey.videos.createVideoRTSP();
             const data = this.getData();
             const qs1 = {
                 api: 'SYNO.SurveillanceStation.Camera',
@@ -412,8 +424,14 @@ class SynoCameraDevice extends DeviceBase {
             };
 
             await this.fetchApi('/webapi/entry.cgi', qs1); // enable RTSP
-            
 
+            // the video is registered once per app run: registering it again
+            // would fail and leave the live stream pointing at nothing
+            if (this.video !== null) {
+                return;
+            }
+
+            const video = await this.homey.videos.createVideoRTSP();
             video.registerVideoUrlListener(async () => {
                 this.log(`[Device] ${this.getName()} - setVideo registerVideoUrlListener`);
 
@@ -429,7 +447,7 @@ class SynoCameraDevice extends DeviceBase {
                 };
 
                 const response = await this.fetchApi('/webapi/entry.cgi', qs);
-                const urlPaths = response.data && response.data.pathInfos;
+                const urlPaths = response && response.data && response.data.pathInfos;
                 const urlPath = urlPaths && urlPaths.length && urlPaths[0];
                 const rtspUrl = urlPath ? urlPath.unicastPath : 'Could_not_get_RTSP_url';
 
@@ -438,6 +456,7 @@ class SynoCameraDevice extends DeviceBase {
             });
 
             await this.setCameraVideo('main', 'Live', video);
+            this.video = video;
         } catch (err) {
             this.homey.app.error(err);
         }
@@ -1034,30 +1053,43 @@ class SynoCameraDevice extends DeviceBase {
     await this.initCapabilityEnabled();
   }
 
+  /**
+   * (re)initialise the camera against its station
+   * runs on init and again after a successful repair, so every step has to be
+   * safe to repeat and one failing step must not skip the rest: if the
+   * Synology is offline while this runs, the image and live stream still
+   * have to be registered
+   * @returns {Promise<boolean>} true when the current state could be read
+   */
   async onStationReady() {
     this.log('on station ready');
 
-    await this.registerCameraForStation();
+    await this.registerCameraForStation().catch(this.error);
 
-    await this.syncConnectionLostRule();
-    await this.syncConnectionNormalRule();
+    if (this.repairListenerRegistered === false) {
+      this.registerCapabilityListener('button.repair_action_rules', async () => {
+        await this.repairActionRules();
+      });
+      this.repairListenerRegistered = true;
+    }
 
-    await this.initCapabilities();
-
-    this.registerCapabilityListener('button.repair_action_rules', async () => {
-      await this.repairActionRules();
-    });
-
-    await this.setImage();
+    await this.setImage().catch(this.error);
     await this.setVideo();
 
-    await this.setCurrentState()
+    await this.syncConnectionLostRule().catch(this.error);
+    await this.syncConnectionNormalRule().catch(this.error);
+
+    await this.initCapabilities().catch(this.error);
+
+    return this.setCurrentState()
       .then(() => {
         this.setAvailable()
           .catch(this.error);
+        return true;
       })
       .catch(err => {
         this.log(err);
+        return false;
       });
   }
 

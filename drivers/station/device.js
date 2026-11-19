@@ -348,7 +348,7 @@ class StationDevice extends DeviceBase {
 
     this.setAvailable();
 
-    const devices = this.getDevices();
+    const devices = await this.getDevices();
     if (devices.length === 0) {
       this.log('no cameras for this station');
       return;
@@ -378,7 +378,7 @@ class StationDevice extends DeviceBase {
 
     this.homey.notifications.registerNotification({ excerpt: this.homey.__('exception.authentication_failed') }, (e, n) => { });
 
-    const devices = this.getDevices();
+    const devices = await this.getDevices();
     if (devices.length === 0) {
       this.log('no cameras for this station');
       return;

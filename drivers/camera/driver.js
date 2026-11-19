@@ -181,7 +181,11 @@ module.exports = class CameraDriver extends Homey.Driver {
         .then(async () => {
           success = await device.validatePair();
           if (success === true) {
-            device.setAvailable();
+            // re-run the full init: if it failed earlier (Synology offline,
+            // expired session) the image, live stream and capabilities were
+            // never set up, and only marking the device available hides that
+            await device.onStationReady().catch(this.error);
+            device.setAvailable().catch(this.error);
           } else {
             device.setUnavailable('authentication failed');
           }
