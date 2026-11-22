@@ -905,8 +905,11 @@ class SynoCameraDevice extends DeviceBase {
    */
   async onNewSid() {
     this.log('camera on new sid');
-    await this.setImage();
-    await this.setVideo();
+    // no Synology calls here: a new session must never lead to another login
+    await this.setImage().catch(this.error);
+    if (this.video === null) {
+      await this.setVideo();
+    }
     this.setAvailable().catch(this.error);
   }
 
